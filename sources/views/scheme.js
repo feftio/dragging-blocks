@@ -33,7 +33,7 @@ export default class SchemeView extends JetView
 	config()
 	{
 		return {
-			type:"space",
+			type:"clean",
 			id:"space",
 			rows: 
 			[
@@ -132,14 +132,13 @@ export default class SchemeView extends JetView
 			{
 				let context = webix.DragControl.getContext(); 
 				let control = $$(context.source[0]);
-
 				pos.x = control.config.left = pos.x+context.x_offset;
 				pos.y = control.config.top  = pos.y+context.y_offset;
 				if (pos.x<0) pos.x=control.config.left=0;
 				if (pos.x>(this.drop.$width-control.$width)) pos.x=control.config.left=this.drop.$width-control.$width;
 				if (pos.y<0) pos.y=control.config.top=0;
 				if (pos.y>(this.drop.$height-control.$height)) pos.y=control.config.top=this.drop.$height-control.$height;
-				window.requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
 				this.rewrite_line(control.config.id, pos);
 				});
 			},
@@ -204,6 +203,48 @@ export default class SchemeView extends JetView
 			}
 
 		});
+
+		webix.ui({
+			view:"window",
+            id:"resultWindow",
+            position:"center",
+            width:500,
+            height:500,
+            modal:true,
+            close:true,
+            head:"Результат",
+            body:
+            {
+            	cols:
+            	[
+            	{
+            		view:"list",
+            		id:"listWays",
+            		template:"#title#",
+            		width:110,
+            		data:
+            		[
+
+            		],
+            		select:true,
+            	},
+
+            	{
+            		type:"clean", 
+            		id:"views", 
+            		animate:false,
+            		cells:
+            		[
+            		{
+            			view:"template",
+            			id:"tpl",
+            			template:"Pick a film from the list!"
+            		}
+            		]
+            	}
+            	]
+            }
+        });
 	}
 
 	focus_off()
@@ -319,7 +360,7 @@ export default class SchemeView extends JetView
 
 				if (Ttype === "output")
 				{
-					x1 = drC.width-1;
+					x1 = drC.width-5;
 					y1 = (tgC.top-drC.top)+tgC.height/2;
 					x2 = -1;
 					y2 = (fcC.top-drC.top)+fcC.height/2;
@@ -385,7 +426,7 @@ export default class SchemeView extends JetView
 
 				if (Ttype === "output")
 				{
-					x1 = drC.width-1;
+					x1 = drC.width-5;
 					y1 = (tgC.top-drC.top)+tgC.height/2;
 					x2 = Fbutton.$view.offsetLeft+fcC.width-2;
 					y2 = Fbutton.$view.offsetTop+fcC.height/2;
@@ -586,7 +627,7 @@ export default class SchemeView extends JetView
 				{
 					x1 = pos.x+tgC.width-2;
 					y1 = pos.y+tgC.height/2;
-					x2 = drC.width-1;
+					x2 = drC.width-5;
 					y2 = (cnC.top-drC.top)+cnC.height/2;
 				}
 
@@ -613,6 +654,7 @@ export default class SchemeView extends JetView
 		let graph = new GraphX(this.Sublings);
 		let vertexes = [];
 		let result;
+		let result_string;
 
 		for (let key in this.Sublings)
 		{
@@ -623,6 +665,25 @@ export default class SchemeView extends JetView
 		}
 		result = graph.getPaths(vertexes);
 		console.dir(result);
+
+		result.forEach(function(value,i)
+		{
+			let num = i+1;
+			$$("listWays").add({
+				id:"way"+num,
+				num: num,
+				title:num+" way",
+			},0);
+		});
+
+		$$("listWays").sort("#num#","asc","int");
+
+		$$("resultWindow").define({
+			width:window.innerWidth/100*50,
+			height:window.innerHeight/100*50
+		});
+		$$("resultWindow").resize();
+		$$("resultWindow").show();
 	}
 
 
