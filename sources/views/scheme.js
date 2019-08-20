@@ -37,7 +37,7 @@ export default class SchemeView extends JetView
 			id:"space",
 			rows: 
 			[
-				{ id:"head", height:70, rows:[{view:"button", id:"result", value:"Result", click:()=>{this.get_result();}}] },
+				{ id:"head", height:70, rows:[{view:"button", id:"result", value:"Result", height:65, click:()=>{this.get_result();}}] },
 
 				{ 
 					view:"scrollview", 
@@ -58,7 +58,7 @@ export default class SchemeView extends JetView
 								view:"abslayout",
 								id:"drop",
 								css:{"border":"2px solid #F9F9F9"},
-								cells:[{ view:"template", id:"drop_hidden", template:'<svg><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth" viewBox="0 0 15 15"><path d="M0,0 L0,6 L9,3 z" fill="#1CA1C1" /></marker></defs></svg>'}]
+								cells:[{ view:"template", id:"drop_hidden", template:'<svg><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth" viewBox="0 0 17 17"><path d="M0,0 L0,6 L9,3 z" fill="#1CA1C1" /></marker></defs></svg>'}]
 							},
 
 							{
@@ -176,9 +176,9 @@ export default class SchemeView extends JetView
 
 				pos.x = control.config.left = pos.x+context.x_offset;
 				pos.y = control.config.top  = pos.y+context.y_offset;
-				if (pos.x<0){pos.x=control.config.left=0; }
-				if (pos.x>(this.drop.$width-control.$width)) pos.x=control.config.left=this.drop.$width-control.$width;
+				if (pos.x<0) pos.x=control.config.left=0;
 				if (pos.y<0) pos.y=control.config.top=0;
+				if (pos.x>(this.drop.$width-control.$width)) pos.x=control.config.left=this.drop.$width-control.$width;
 				if (pos.y>(this.drop.$height-control.$height)) pos.y=control.config.top=this.drop.$height-control.$height;
 			},
 
@@ -212,7 +212,22 @@ export default class SchemeView extends JetView
             height:500,
             modal:true,
             close:true,
-            head:"Результат",
+            head:
+            {
+            	view:"toolbar", 
+            	elements:
+            	[
+
+            	{ template:'<span style="font-size:20px;">Result</span>'},
+
+            	{ 
+            		view:"icon", 
+            		icon:"wxi-close", 
+            		click:function(){$$("resultWindow").hide();$$("listWays").clearAll();}
+            	}
+
+            	],
+            },
             body:
             {
             	cols:
@@ -230,17 +245,14 @@ export default class SchemeView extends JetView
             	},
 
             	{
-            		type:"clean", 
-            		id:"views", 
-            		animate:false,
-            		cells:
-            		[
-            		{
-            			view:"template",
-            			id:"tpl",
-            			template:"Pick a film from the list!"
-            		}
-            		]
+            		view:"scrollview",
+					id:"listDemo",
+					minHeight:100,
+					scroll:"y",
+					body:
+					{
+						//id:"listDemoWin"
+					}
             	}
             	]
             }
@@ -668,11 +680,12 @@ export default class SchemeView extends JetView
 
 		result.forEach(function(value,i)
 		{
-			let num = i+1;
+			let CountWays = i+1;
 			$$("listWays").add({
-				id:"way"+num,
-				num: num,
-				title:num+" way",
+				id:"way"+CountWays,
+				num:CountWays,
+				title:CountWays+" way",
+				array:value
 			},0);
 		});
 
@@ -680,11 +693,11 @@ export default class SchemeView extends JetView
 
 		$$("resultWindow").define({
 			width:window.innerWidth/100*50,
-			height:window.innerHeight/100*50
+			height:window.innerHeight/100*50,
+			minWidth:window.innerWidth/100*50,
+			minHeight:window.innerHeight/100*50,
 		});
 		$$("resultWindow").resize();
 		$$("resultWindow").show();
 	}
-
-
 }
