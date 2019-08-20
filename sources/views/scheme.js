@@ -104,6 +104,7 @@ export default class SchemeView extends JetView
 		this.LinesPack         = {};
 		this.ButtonsPack       = {};
 		this.Sublings          = {};
+		this.SublingsReverse   = {};
 
 		this.ButtonCoordinates = {};
 
@@ -481,6 +482,7 @@ export default class SchemeView extends JetView
 			if (this.ButtonsPack.hasOwnProperty(FocusButton))  this.ButtonsPack[FocusButton].push(lineId);    else this.ButtonsPack[FocusButton]  = [lineId];
 			if (this.ButtonsPack.hasOwnProperty(TargetButton)) this.ButtonsPack[TargetButton].push(lineId);   else this.ButtonsPack[TargetButton] = [lineId];
 			if (this.Sublings.hasOwnProperty(FocusButton))     this.Sublings[FocusButton].push(TargetButton); else this.Sublings[FocusButton]     = [TargetButton];
+			if (this.SublingsReverse.hasOwnProperty(TargetButton)) this.SublingsReverse[TargetButton].push(FocusButton); else this.SublingsReverse[TargetButton] = [FocusButton];
 			this.focus_off();
 		}
 	}
@@ -677,6 +679,7 @@ export default class SchemeView extends JetView
 		}
 		result = graph.getPaths(vertexes);
 		console.dir(result);
+		console.dir(this.SublingsReverse);
 
 		result.forEach(function(value,i)
 		{
