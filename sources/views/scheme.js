@@ -9,9 +9,9 @@ export default class SchemeView extends JetView
 	{
 		super(app, name);
 
-		const inputs_template           = { view:"button", width:70,  height:50, click:function(id,event){this.$scope.click_button(id,event);}};
+		const inputs_template           = { view:"button", width:70,  height:50, click:function(id,event){this.$scope.clickButton(id,event);}};
 		const main_middlewares_template = { view:"button", width:100, height:100, css:"webix_primary"};
-		const outputs_template          = { view:"button", width:70,  height:50, click:function(id,event){this.$scope.click_button(id,event);}};
+		const outputs_template          = { view:"button", width:70,  height:50, click:function(id,event){this.$scope.clickButton(id,event);}};
 
 		this.inputs           = [];
 		this.main_middlewares = [];
@@ -34,10 +34,10 @@ export default class SchemeView extends JetView
 	{
 		return {
 			type:"clean",
-			id:"space",
+			id:"layer",
 			rows: 
 			[
-				{ id:"head", height:70, rows:[{view:"button", id:"result", value:"Result", height:65, click:()=>{this.get_result();}}] },
+				{ id:"head", height:70, rows:[{view:"button", id:"result", value:"Result", height:65, click:()=>{this.getResult();}}] },
 
 				{ 
 					view:"scrollview", 
@@ -89,7 +89,7 @@ export default class SchemeView extends JetView
 
 	init()
 	{
-		this.space           = this.$$("space");
+		this.layer           = this.$$("layer");
 		this.head            = this.$$("head");
 		this.area            = this.$$("area");
 		this.input           = this.$$("input");
@@ -103,8 +103,9 @@ export default class SchemeView extends JetView
 
 		this.LinesPack         = {};
 		this.ButtonsPack       = {};
-		this.Sublings          = {};
-		this.SublingsReverse   = {};
+		this.Graph             = {};
+		this.GraphReverse      = {};
+		this.Queues            = {Lines:[], Middlewares:[]};
 
 		this.ButtonCoordinates = {};
 
@@ -119,7 +120,7 @@ export default class SchemeView extends JetView
 
 		this.drop.$view.onclick = (event) => 
 		{
-			if (event.target === this.svg) this.focus_off(this.FocusButton);
+			if (event.target === this.svg) this.focusOff(this.FocusButton);
 		}
 
 		webix.DragControl.addDrag(this.drop.$view,
@@ -140,7 +141,7 @@ export default class SchemeView extends JetView
 				if (pos.y<0) pos.y=control.config.top=0;
 				if (pos.y>(this.drop.$height-control.$height)) pos.y=control.config.top=this.drop.$height-control.$height;
 				requestAnimationFrame(() => {
-				this.rewrite_line(control.config.id, pos);
+				this.rewriteLine(control.config.id, pos);
 				});
 			},
 
@@ -163,7 +164,7 @@ export default class SchemeView extends JetView
 
 		});
 
-		webix.DragControl.addDrag(this.space.$view, 
+		webix.DragControl.addDrag(this.layer.$view, 
 		{
 			$dragDestroy: (from, html) => 
 			{
@@ -188,7 +189,7 @@ export default class SchemeView extends JetView
 				const parent = webix.$$(ev);
 				if (parent && parent.config.$type && parent.config.$type === "main_middleware")
 				{
-					let elA     = this.add_middleware(parent);
+					let elA     = this.addMiddleware(parent);
 					let pos     = webix.html.pos(ev);
 					let elC     = elA.$view.getBoundingClientRect();
 					let context = webix.DragControl.getContext();
@@ -260,7 +261,7 @@ export default class SchemeView extends JetView
         });
 	}
 
-	focus_off()
+	focusOff()
 	{
 		if ((this.FocusButton) || (this.FocusButton.length !== 0))
 		{
@@ -269,7 +270,7 @@ export default class SchemeView extends JetView
 		}
 	}
 
-	focus_on(TargetButton)
+	focusOn(TargetButton)
 	{
 		if ((TargetButton) || (TargetButton.length !== 0))
 		{
@@ -278,13 +279,13 @@ export default class SchemeView extends JetView
 		}
 	}
 
-	focus_change(TargetButton)
+	focusChange(TargetButton)
 	{
-		this.focus_off();
-		this.focus_on(TargetButton);
+		this.focusOff();
+		this.focusOn(TargetButton);
 	}
 
-	angle_vectors(v1, v2)
+	angleVectors(v1, v2)
 	{
 		let lenght_v1 = Math.sqrt((v1.x*v1.x)+(v1.y*v1.y));
 		let lenght_v2 = Math.sqrt((v2.x*v2.x)+(v2.y*v2.y));
@@ -306,23 +307,20 @@ export default class SchemeView extends JetView
 
 		line.onclick = (event) => 
 		{
-			this.CountLines--;
-			let id = event.target.id;
-			if (id) event.target.remove();
+			let lineId = event.target.id;
 
-			for (let key in this.ButtonsPack)
-			{
-				this.ButtonsPack[key].forEach((value, index) => 
-				{
-					if (id === value) this.ButtonsPack[key].splice(index, 1);
-				});
-			}
-			if (this.LinesPack.hasOwnProperty(id)) delete this.LinesPack[id];
+			this.CountLines--;
+
+			this.Queues.Lines.push(lineId);
+
+			if (lineId) event.target.remove();
+
+			this.removeConnectionsByLine(lineId);
 		}
 		return line;
 	}
 
-	add_line(TargetButton, event)
+	addLine(TargetButton, event)
 	{
 		let FocusButton = this.FocusButton;
 
@@ -359,7 +357,7 @@ export default class SchemeView extends JetView
 			{
 				if (Ttype === "input")
 				{
-					this.focus_change(TargetButton);
+					this.focusChange(TargetButton);
 					return;
 				}
 
@@ -399,7 +397,7 @@ export default class SchemeView extends JetView
 					v1.y = (tgC.top+tgC.height/2)-(fcC.top+fcC.height/2);
 					v2.x = (0)-(fcC.left+fcC.width/2);
 					v2.y = (0);
-					angle = this.angle_vectors(v1,v2);
+					angle = this.angleVectors(v1,v2);
 
 					if ( ((angle>=45) && (angle<=135)) )
 					{
@@ -466,7 +464,7 @@ export default class SchemeView extends JetView
 
 				if (Ttype === "output")
 				{
-					this.focus_change(TargetButton);
+					this.focusChange(TargetButton);
 					return;
 				}
 			}
@@ -477,26 +475,21 @@ export default class SchemeView extends JetView
 			let lineId  = "line" + this.CountLines;
 
 			this.svg.appendChild(this.createLine(lnC, lineId));
-
-			this.LinesPack[lineId] = [FocusButton, TargetButton];
-			if (this.ButtonsPack.hasOwnProperty(FocusButton))  this.ButtonsPack[FocusButton].push(lineId);    else this.ButtonsPack[FocusButton]  = [lineId];
-			if (this.ButtonsPack.hasOwnProperty(TargetButton)) this.ButtonsPack[TargetButton].push(lineId);   else this.ButtonsPack[TargetButton] = [lineId];
-			if (this.Sublings.hasOwnProperty(FocusButton))     this.Sublings[FocusButton].push(TargetButton); else this.Sublings[FocusButton]     = [TargetButton];
-			if (this.SublingsReverse.hasOwnProperty(TargetButton)) this.SublingsReverse[TargetButton].push(FocusButton); else this.SublingsReverse[TargetButton] = [FocusButton];
-			this.focus_off();
+			this.addConnections(TargetButton, lineId, FocusButton);
+			this.focusOff();
 		}
 	}
 
-	add_middleware(el)
+	addMiddleware(el)
 	{
 		this.CountMiddlewares++;                          
-		let ButtonId = "middleware" + this.CountMiddlewares;
+		let buttonId = "middleware" + this.CountMiddlewares;
 		let elC = el.$view.getBoundingClientRect();
 
 		this.drop.addView(
 		{
 			view:"button",
-			id:ButtonId,
+			id:buttonId,
 			$type:"middleware",
 			label:el.config.label,
 			top:elC.top,
@@ -507,12 +500,12 @@ export default class SchemeView extends JetView
 			parentId:el.config.id
 		});
 
-		$$(ButtonId).$view.onmousedown = (event) =>
+		$$(buttonId).$view.onmousedown = (event) =>
 		{
 			if (event.which == 1) this.ButtonCoordinates = event.target.getBoundingClientRect();
 		}
 
-		$$(ButtonId).$view.onmouseup = (event) =>
+		$$(buttonId).$view.onmouseup = (event) =>
 		{
 			if (
 				(event.target.getBoundingClientRect().x === this.ButtonCoordinates.x) && 
@@ -520,43 +513,42 @@ export default class SchemeView extends JetView
 				(event.which == 1)
 			   )
 			{
-				this.click_button(ButtonId, event);
+				this.clickButton(buttonId, event);
 			}
 		}
-		return $$(ButtonId);
+		return $$(buttonId);
 	}
 
-	click_button(TargetButton, event)
+	clickButton(TargetButton, event)
 	{
 		let FocusButton = this.FocusButton;
-		if ((!FocusButton) || (FocusButton.length === 0))
+		if ( (!FocusButton) || (FocusButton.length === 0) )
 		{
-			this.focus_on(TargetButton);
+			this.focusOn(TargetButton);
 		}
 		else
 		{
 			if (FocusButton !== TargetButton)
 			{
-				this.add_line(TargetButton, event);
+				this.addLine(TargetButton, event);
 			}
 			else
 			{
-				this.focus_off();
+				this.focusOff();
 			}
 		}
 	}
 
-	rewrite_line(TargetButton, pos)
+	rewriteLine(TargetButton, pos)
 	{
 		let Tbutton = $$(TargetButton);
 		let Ttype   = Tbutton.config.$type;
 
-		if ( (Ttype) && (Ttype === "middleware") && (this.ButtonsPack.hasOwnProperty(TargetButton)))
+		if ( (Ttype) && (Ttype === "middleware") && (this.ButtonsPack.hasOwnProperty(TargetButton)) )
 		{
 			this.ButtonsPack[TargetButton].forEach((lineId) =>
 			{
 				let line = document.getElementById(lineId);
-				let Tbutton = $$(TargetButton);
 				let tgC  = Tbutton.$view.getBoundingClientRect();
 				let drC  = this.drop.$view.getBoundingClientRect();
 
@@ -599,7 +591,7 @@ export default class SchemeView extends JetView
 					v1.y = (tgC.top+tgC.height/2)-(cnC.top+cnC.height/2);
 					v2.x = (0)-(cnC.left+cnC.width/2);
 					v2.y = (0);
-					angle = this.angle_vectors(v1,v2);
+					angle = this.angleVectors(v1,v2);
 
 					if ( ((angle>=45) && (angle<=135)) )
 					{
@@ -645,7 +637,7 @@ export default class SchemeView extends JetView
 					y2 = (cnC.top-drC.top)+cnC.height/2;
 				}
 
-				if ( (TargetButton in this.Sublings) && (this.Sublings[TargetButton].indexOf(ConnectButton)>=0) )
+				if ( (TargetButton in this.Graph) && (this.Graph[TargetButton].indexOf(ConnectButton)>=0) )
 				{
 					line.setAttribute("x1", x1);
 					line.setAttribute("y1", y1);
@@ -663,14 +655,81 @@ export default class SchemeView extends JetView
 		}
 	}
 
-	get_result()
+	addConnections(TargetButton, lineId, FocusButton)
 	{
-		let graph = new GraphX(this.Sublings);
+		this.LinesPack[lineId] = [FocusButton, TargetButton];
+
+		if (this.ButtonsPack.hasOwnProperty(FocusButton))
+			this.ButtonsPack[FocusButton].push(lineId);
+		else
+			this.ButtonsPack[FocusButton] = [lineId];
+
+		if (this.ButtonsPack.hasOwnProperty(TargetButton))
+			this.ButtonsPack[TargetButton].push(lineId);
+		else
+			this.ButtonsPack[TargetButton] = [lineId];
+
+		if (this.Graph.hasOwnProperty(FocusButton))
+			this.Graph[FocusButton].push(TargetButton);
+		else
+			this.Graph[FocusButton] = [TargetButton];
+
+		if (this.GraphReverse.hasOwnProperty(TargetButton))
+			this.GraphReverse[TargetButton].push(FocusButton);
+		else
+			this.GraphReverse[TargetButton] = [FocusButton];
+	}
+
+	removeConnectionsByLine(lineId)
+	{
+		for (let key in this.ButtonsPack)
+		{
+			this.ButtonsPack[key].forEach((value, index) => 
+			{
+				if (lineId === value)
+				{
+					this.ButtonsPack[key].splice(index, 1);
+				}
+			});
+		}
+
+		this.LinesPack[lineId].forEach((value, index, array) =>
+		{
+			if (this.Graph.hasOwnProperty(value))
+				this.Graph[value].forEach((v, i) =>
+				{
+					if (index === 0)
+						if (v === array[index+1]) this.Graph[value].splice(i, 1);
+					else
+						if (v === array[index-1]) this.Graph[value].splice(i, 1);
+				});
+
+			if (this.GraphReverse.hasOwnProperty(value))
+				this.GraphReverse[value].forEach((v, i) =>
+				{
+					if (index === 0)
+						if (v === array[index+1]) this.GraphReverse[value].splice(i, 1);
+					else
+						if (v === array[index-1]) this.GraphReverse[value].splice(i, 1);
+				});
+		});
+
+		if (this.LinesPack.hasOwnProperty(lineId)) delete this.LinesPack[lineId];
+	}
+
+	removeConnectionsByButton(buttonId)
+	{
+
+	}
+
+	getResult()
+	{
+		let graph = new GraphX(this.Graph);
 		let vertexes = [];
 		let result;
 		let result_string;
 
-		for (let key in this.Sublings)
+		for (let key in this.Graph)
 		{
 			if ($$(key).config.$type === "input")
 			{
@@ -679,7 +738,7 @@ export default class SchemeView extends JetView
 		}
 		result = graph.getPaths(vertexes);
 		console.dir(result);
-		console.dir(this.SublingsReverse);
+		console.dir(this.Graph);
 
 		result.forEach(function(value,i)
 		{
