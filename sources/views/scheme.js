@@ -308,13 +308,7 @@ export default class SchemeView extends JetView
 		line.onclick = (event) => 
 		{
 			let lineId = event.target.id;
-
-			this.CountLines--;
-
-			this.Queues.Lines.push(lineId);
-
 			if (lineId) event.target.remove();
-
 			this.removeConnectionsByLine(lineId);
 		}
 		return line;
@@ -468,13 +462,10 @@ export default class SchemeView extends JetView
 					return;
 				}
 			}
+			
+			let lineId = this.getLineId();
 
-			this.CountLines++;
-
-			let lnC = {x1:x2,y1:y2,x2:x1,y2:y1};
-			let lineId  = "line" + this.CountLines;
-
-			this.svg.appendChild(this.createLine(lnC, lineId));
+			this.svg.appendChild(this.createLine({x1:x2,y1:y2,x2:x1,y2:y1}, lineId));
 			this.addConnections(TargetButton, lineId, FocusButton);
 			this.focusOff();
 		}
@@ -682,6 +673,7 @@ export default class SchemeView extends JetView
 
 	removeConnectionsByLine(lineId)
 	{
+		this.Queues.Lines.push(lineId);
 		for (let key in this.ButtonsPack)
 		{
 			this.ButtonsPack[key].forEach((value, index) => 
@@ -700,7 +692,7 @@ export default class SchemeView extends JetView
 				{
 					if (index === 0)
 						if (v === array[index+1]) this.Graph[value].splice(i, 1);
-					else
+					if (index === 1)
 						if (v === array[index-1]) this.Graph[value].splice(i, 1);
 				});
 
@@ -709,7 +701,7 @@ export default class SchemeView extends JetView
 				{
 					if (index === 0)
 						if (v === array[index+1]) this.GraphReverse[value].splice(i, 1);
-					else
+					if (index === 1)
 						if (v === array[index-1]) this.GraphReverse[value].splice(i, 1);
 				});
 		});
@@ -720,6 +712,13 @@ export default class SchemeView extends JetView
 	removeConnectionsByButton(buttonId)
 	{
 
+	}
+
+	getLineId()
+	{
+		if (this.Queues.Lines.length !== 0) return this.Queues.Lines.shift();
+		this.CountLines++;
+		return "line" + this.CountLines;
 	}
 
 	getResult()
@@ -739,6 +738,7 @@ export default class SchemeView extends JetView
 		result = graph.getPaths(vertexes);
 		console.dir(result);
 		console.dir(this.Graph);
+		console.dir(this.GraphReverse);
 
 		result.forEach(function(value,i)
 		{
