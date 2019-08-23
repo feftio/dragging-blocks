@@ -1,16 +1,6 @@
-import {
-	JetView
-} from "webix-jet";
-
-import {
-	inputs_db,
-	main_middlewares_db,
-	outputs_db
-} from "models/scheme";
-
-import {
-	GraphX
-} from "helpers/GraphX";
+import {JetView} from "webix-jet";
+import {inputs_db,main_middlewares_db,outputs_db} from "models/scheme";
+import {GraphX} from "helpers/GraphX";
 
 export default class SchemeView extends JetView {
 
@@ -277,7 +267,6 @@ export default class SchemeView extends JetView {
 						view: "list",
 						id: "listWays",
 						template: "#title#",
-						minHeight: 100,
 						data: [
 
 						],
@@ -285,17 +274,23 @@ export default class SchemeView extends JetView {
 					},
 
 					{
-						view: "resizer"
-					},
-
-					{
 						view: "scrollview",
 						id: "listDemo",
 						minHeight: 100,
-						scroll: "y",
+						height: 100,
+						scroll: "x",
 						body: {
 							//id:"listDemoWin"
 						}
+					},
+
+					{
+						view: "layout",
+						id: "listOptions",
+						minHeight: 70,
+						height: 70,
+						hidden: true,
+						rows: [{}]
 					}
 				]
 			}
@@ -662,6 +657,7 @@ export default class SchemeView extends JetView {
 						if (v === array[index + 1]) this.Graph[value].splice(i, 1);
 					if (index === 1)
 						if (v === array[index - 1]) this.Graph[value].splice(i, 1);
+					if (this.Graph[value].length === 0) delete this.Graph[value];
 				});
 
 			if (this.GraphReverse.hasOwnProperty(value))
@@ -670,6 +666,7 @@ export default class SchemeView extends JetView {
 						if (v === array[index + 1]) this.GraphReverse[value].splice(i, 1);
 					if (index === 1)
 						if (v === array[index - 1]) this.GraphReverse[value].splice(i, 1);
+					if (this.GraphReverse[value].length === 0) delete this.GraphReverse[value];
 				});
 		});
 
@@ -705,15 +702,13 @@ export default class SchemeView extends JetView {
 		}
 		result = graph.getPaths(vertexes);
 		console.dir(result);
-		console.dir(this.Graph);
-		console.dir(this.GraphReverse);
 
-		result.forEach(function(value, i) {
-			let CountWays = i + 1;
+		result.forEach(function(value, index) {
+			let CountWays = index + 1;
 			$$("listWays").add({
 				id: "way" + CountWays,
 				num: CountWays,
-				title: CountWays + " way",
+				title: CountWays + ") " + value,
 				array: value
 			}, 0);
 		});
