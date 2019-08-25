@@ -215,17 +215,17 @@ export default class SchemeView extends JetView {
 			$dragCreate: (source, ev) => {
 				const parent = webix.$$(ev);
 				if (parent && parent.config.$type && parent.config.$type === "main_middleware") {
-					let elA = this.addMiddleware(parent);
+					let mdl = this.addMiddleware(parent);
 					let pos = webix.html.pos(ev);
-					let elC = elA.$view.getBoundingClientRect();
+					let elC = mdl.$view.getBoundingClientRect();
 					let context = webix.DragControl.getContext();
 
-					context.source = [elA.config.id];
+					context.source = [mdl.config.id];
 					context.from = this.main_middleware;
 					context.to = this.drop;
 					context.y_offset = (pos.y - elC.top - elC.height - ev.layerY) + elC.height / 2;
 					context.x_offset = (pos.x - elC.left - elC.width - ev.layerX) + elC.width / 2;
-					return elA.$view;
+					return mdl.$view;
 				}
 				return false;
 			}
