@@ -132,9 +132,7 @@ export default class SchemeView extends JetView {
 
 		this.CountMiddlewares = 0;
 		this.CountLines = 0;
-
 		this.fbID = "";
-
 		this.LinesPack = {};
 		this.ButtonsPack = {};
 		this.Graph = {};
@@ -146,16 +144,15 @@ export default class SchemeView extends JetView {
 
 		this.ButtonCoordinates = {};
 
-		this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-		this.svg.setAttribute("id", "svg");
-		this.svg.setAttribute("width", "100%");
-		this.svg.setAttribute("height", "100%");
-		this.svg.setAttribute("version", "1.1");
-		this.svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+		this.svg = this.createSVG("svg");
 		this.drop.$view.appendChild(this.svg);
 
 		this.drop.$view.onclick = (event) => {
 			if (event.target === this.svg) this.focusOff(this.fbID);
+		}
+
+		window.onresize = () => {
+			console.log(this.drop.$width);
 		}
 
 		webix.DragControl.addDrag(this.drop.$view, {
@@ -164,12 +161,11 @@ export default class SchemeView extends JetView {
 			},
 
 			$dragPos: (pos, ev) => {
-
 				let context = webix.DragControl.getContext();
 				let control = $$(context.source[0]);
+
 				pos.x = control.config.left = pos.x + context.x_offset;
 				pos.y = control.config.top = pos.y + context.y_offset;
-
 				if (pos.x < 0) pos.x = control.config.left = 0;
 				if (pos.x > (this.drop.$width - control.$width)) pos.x = control.config.left = this.drop.$width - control.$width;
 				if (pos.y < 0) pos.y = control.config.top = 0;
@@ -186,6 +182,7 @@ export default class SchemeView extends JetView {
 				if (el && el !== this.drop) {
 					let pos = webix.html.pos(ev);
 					let context = webix.DragControl.getContext();
+
 					context.source = [el.config.id];
 					context.from = this.drop;
 					context.to = this.drop;
@@ -320,9 +317,9 @@ export default class SchemeView extends JetView {
 		return Math.acos(((v1.x * v2.x) + (v1.y * v2.y)) / (Math.sqrt((v1.x * v1.x) + (v1.y * v1.y)) * Math.sqrt((v2.x * v2.x) + (v2.y * v2.y)))) * 180 / Math.PI;
 	}
 
-	createLine(lnC, lineId) {
+	createLine(lnC, lnID) {
 		let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-		line.setAttribute("id", lineId);
+		line.setAttribute("id", lnID);
 		line.setAttribute("type", "line");
 		line.setAttribute("x1", lnC.x1);
 		line.setAttribute("y1", lnC.y1);
@@ -336,6 +333,16 @@ export default class SchemeView extends JetView {
 			this.removeConnectionsByLine(lnID);
 		}
 		return line;
+	}
+
+	createSVG(svgID) {
+		let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		svg.setAttribute("id", svgID);
+		svg.setAttribute("width", "100%");
+		svg.setAttribute("height", "100%");
+		svg.setAttribute("version", "1.1");
+		svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+		return svg;
 	}
 
 	addLine(tbID, event) {
@@ -708,7 +715,7 @@ export default class SchemeView extends JetView {
 			$$("listWays").add({
 				id: "way" + CountWays,
 				num: CountWays,
-				title: CountWays + ") " + value,
+				title: CountWays + ") " + value.join(" -> "),
 				array: value
 			}, 0);
 		});
