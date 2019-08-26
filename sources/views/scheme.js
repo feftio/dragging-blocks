@@ -380,86 +380,41 @@ export default class SchemeView extends JetView {
 				}
 
 				if (Ttype === "middleware") {
-					x1 = Tbutton.$view.offsetLeft + 2;
-					y1 = Tbutton.$view.offsetTop + tgC.height / 2;
-					x2 = 1;
-					y2 = (fcC.top - drC.top) + fcC.height / 2;
+					x1 = 1;
+					y1 = (fcC.top - drC.top) + fcC.height / 2;
+					x2 = Tbutton.$view.offsetLeft + 2;
+					y2 = Tbutton.$view.offsetTop + tgC.height / 2;
 				}
 
 				if (Ttype === "output") {
-					x1 = drC.width - 5;
-					y1 = (tgC.top - drC.top) + tgC.height / 2;
-					x2 = -1;
-					y2 = (fcC.top - drC.top) + fcC.height / 2;
+					x1 = -1;
+					y1 = (fcC.top - drC.top) + fcC.height / 2;
+					x2 = drC.width - 5;
+					y2 = (tgC.top - drC.top) + tgC.height / 2;
 				}
 			}
 
 			if ((Ftype) && (Ftype === "middleware")) {
-				if (Ttype === "input") {
-					x1 = 1;
-					y1 = (tgC.top - drC.top) + tgC.height / 2;
-					x2 = Fbutton.$view.offsetLeft + 2;
-					y2 = Fbutton.$view.offsetTop + fcC.height / 2;
-				}
-
-				if (Ttype === "middleware") {
-					let v1 = {};
-					let v2 = {};
-					let angle;
-					v1.x = (tgC.left + tgC.width / 2) - (fcC.left + fcC.width / 2);
-					v1.y = (tgC.top + tgC.height / 2) - (fcC.top + fcC.height / 2);
-					v2.x = (0) - (fcC.left + fcC.width / 2);
-					v2.y = (0);
-					angle = this.angleVectors(v1, v2);
-
-					if (((angle >= 45) && (angle <= 135))) {
-						if ((tgC.top + tgC.height / 2) <= (fcC.top + fcC.height / 2)) {
-							x1 = Tbutton.$view.offsetLeft + tgC.width / 2;
-							y1 = Tbutton.$view.offsetTop + tgC.height - 2;
-							x2 = Fbutton.$view.offsetLeft + fcC.width / 2;
-							y2 = Fbutton.$view.offsetTop + 2;
-						} else {
-							x1 = Tbutton.$view.offsetLeft + tgC.width / 2;
-							y1 = Tbutton.$view.offsetTop + 2;
-							x2 = Fbutton.$view.offsetLeft + fcC.width / 2;
-							y2 = Fbutton.$view.offsetTop + fcC.height - 2;
-						}
-					} else {
-						if ((tgC.left + tgC.width / 2) <= (fcC.left + fcC.width / 2)) {
-							x1 = Tbutton.$view.offsetLeft + tgC.width - 2;
-							y1 = Tbutton.$view.offsetTop + tgC.height / 2;
-							x2 = Fbutton.$view.offsetLeft + 2;
-							y2 = Fbutton.$view.offsetTop + tgC.height / 2;
-						} else {
-							x1 = Tbutton.$view.offsetLeft + 2;
-							y1 = Tbutton.$view.offsetTop + tgC.height / 2;
-							x2 = Fbutton.$view.offsetLeft + fcC.width - 2;
-							y2 = Fbutton.$view.offsetTop + fcC.height / 2;
-						}
-					}
-				}
-
-				if (Ttype === "output") {
-					x1 = drC.width - 5;
-					y1 = (tgC.top - drC.top) + tgC.height / 2;
-					x2 = Fbutton.$view.offsetLeft + fcC.width - 2;
-					y2 = Fbutton.$view.offsetTop + fcC.height / 2;
-				}
+				let obj = this.rewriteM(Ttype, {x: Fbutton.$view.offsetLeft, y: Fbutton.$view.offsetTop}, {x: Tbutton.$view.offsetLeft, y: Tbutton.$view.offsetTop}, {tgC: fcC, cnC: tgC, drC: drC});
+				x1 = obj.x1;
+				y1 = obj.y1;
+				x2 = obj.x2;
+				y2 = obj.y2;
 			}
 
 			if ((Ftype) && (Ftype === "output")) {
 				if (Ttype === "input") {
-					x1 = 1;
-					y1 = (tgC.top - drC.top) + tgC.height / 2;
-					x2 = drC.width + 2;
-					y2 = (fcC.top - drC.top) + fcC.height / 2;
+					x1 = drC.width + 2;
+					y1 = (fcC.top - drC.top) + fcC.height / 2;
+					x2 = 1;
+					y2 = (tgC.top - drC.top) + tgC.height / 2;
 				}
 
 				if (Ttype === "middleware") {
-					x1 = Tbutton.$view.offsetLeft + tgC.width - 2;
-					y1 = Tbutton.$view.offsetTop + tgC.height / 2;
-					x2 = drC.width - 1;
-					y2 = (fcC.top - drC.top) + fcC.height / 2;
+					x1 = drC.width - 1;
+					y1 = (fcC.top - drC.top) + fcC.height / 2;
+					x2 = Tbutton.$view.offsetLeft + tgC.width - 2;
+					y2 = Tbutton.$view.offsetTop + tgC.height / 2;
 				}
 
 				if (Ttype === "output") {
@@ -471,10 +426,10 @@ export default class SchemeView extends JetView {
 			let lnID = this.nextlnID();
 
 			this.svg.appendChild(this.createLine({
-				x1: x2,
-				y1: y2,
-				x2: x1,
-				y2: y1
+				x1: x1,
+				y1: y1,
+				x2: x2,
+				y2: y2
 			}, lnID));
 			this.addConnections(tbID, lnID, fbID);
 			this.focusOff();
@@ -537,15 +492,7 @@ export default class SchemeView extends JetView {
 				let tgC = Tbutton.$view.getBoundingClientRect();
 				let drC = this.drop.$view.getBoundingClientRect();
 
-				let cbID;
-				let Cbutton;
-				let Ctype;
-				let cnC;
-
-				let x1;
-				let y1;
-				let x2;
-				let y2;
+				let cbID, Cbutton, Ctype, cnC;
 
 				this.LinesPack[lnID].forEach(function(value) {
 					if (value !== tbID) {
@@ -556,70 +503,88 @@ export default class SchemeView extends JetView {
 					}
 				});
 
-				if (Ctype === "input") {
-					x1 = pos.x + 2;
-					y1 = pos.y + tgC.height / 2;
-					x2 = 1;
-					y2 = (cnC.top - drC.top) + cnC.height / 2;
-				}
-
-				if (Ctype === "middleware") {
-					let v1 = {};
-					let v2 = {};
-					let angle;
-
-					v1.x = (tgC.left + tgC.width / 2) - (cnC.left + cnC.width / 2);
-					v1.y = (tgC.top + tgC.height / 2) - (cnC.top + cnC.height / 2);
-					v2.x = (0) - (cnC.left + cnC.width / 2);
-					v2.y = (0);
-					angle = this.angleVectors(v1, v2);
-
-					if (((angle >= 45) && (angle <= 135))) {
-						if ((tgC.top + tgC.height / 2) <= (cnC.top + cnC.height / 2)) {
-							x1 = pos.x + tgC.width / 2;
-							y1 = pos.y + tgC.height - 2;
-							x2 = Cbutton.$view.offsetLeft + cnC.width / 2;
-							y2 = Cbutton.$view.offsetTop + 2;
-						} else {
-							x1 = pos.x + tgC.width / 2;
-							y1 = pos.y + 2;
-							x2 = Cbutton.$view.offsetLeft + cnC.width / 2;
-							y2 = Cbutton.$view.offsetTop + cnC.height - 2;
-						}
-					} else {
-						if ((tgC.left + tgC.width / 2) <= (cnC.left + cnC.width / 2)) {
-							x1 = pos.x + tgC.width - 2;
-							y1 = pos.y + tgC.height / 2;
-							x2 = Cbutton.$view.offsetLeft + 2;
-							y2 = Cbutton.$view.offsetTop + cnC.height / 2;
-						} else {
-							x1 = pos.x + 2;
-							y1 = pos.y + tgC.height / 2;
-							x2 = Cbutton.$view.offsetLeft + cnC.width - 2;
-							y2 = Cbutton.$view.offsetTop + cnC.height / 2;
-						}
-					}
-				}
-
-				if (Ctype === "output") {
-					x1 = pos.x + tgC.width - 2;
-					y1 = pos.y + tgC.height / 2;
-					x2 = drC.width - 5;
-					y2 = (cnC.top - drC.top) + cnC.height / 2;
-				}
+				let lnC = this.rewriteM(Ctype, pos, {x: Cbutton.$view.offsetLeft, y: Cbutton.$view.offsetTop}, {tgC: tgC, cnC: cnC, drC: drC});
 
 				if ((tbID in this.Graph) && (this.Graph[tbID].indexOf(cbID) >= 0)) {
-					line.setAttribute("x1", x1);
-					line.setAttribute("y1", y1);
-					line.setAttribute("x2", x2);
-					line.setAttribute("y2", y2);
+					line.setAttribute("x1", lnC.x1);
+					line.setAttribute("y1", lnC.y1);
+					line.setAttribute("x2", lnC.x2);
+					line.setAttribute("y2", lnC.y2);
 				} else {
-					line.setAttribute("x1", x2);
-					line.setAttribute("y1", y2);
-					line.setAttribute("x2", x1);
-					line.setAttribute("y2", y1);
+					line.setAttribute("x1", lnC.x2);
+					line.setAttribute("y1", lnC.y2);
+					line.setAttribute("x2", lnC.x1);
+					line.setAttribute("y2", lnC.y1);
 				}
 			});
+		}
+	}
+
+	rewriteM(type, fromOffset, toOffset, coords)
+	{
+		let fromCoords = coords.tgC;
+		let toCoords = coords.cnC;
+		let dropCoords = coords.drC;
+
+		let x1, y1, x2, y2;
+
+		if (type === "input") {
+			x1 = fromOffset.x + 2;
+			y1 = fromOffset.y + fromCoords.height / 2;
+			x2 = 1;
+			y2 = (toCoords.top - dropCoords.top) + toCoords.height / 2;
+		}
+
+		if (type === "middleware") {
+			let v1 = {};
+			let v2 = {};
+			let angle;
+
+			v1.x = (fromCoords.left + fromCoords.width / 2) - (toCoords.left + toCoords.width / 2);
+			v1.y = (fromCoords.top + fromCoords.height / 2) - (toCoords.top + toCoords.height / 2);
+			v2.x = (0) - (toCoords.left + toCoords.width / 2);
+			v2.y = (0);
+			angle = this.angleVectors(v1, v2);
+
+			if (((angle >= 45) && (angle <= 135))) {
+				if ((fromCoords.top + fromCoords.height / 2) <= (toCoords.top + toCoords.height / 2)) {
+					x1 = fromOffset.x + fromCoords.width / 2;
+					y1 = fromOffset.y + fromCoords.height - 2;
+					x2 = toOffset.x + toCoords.width / 2;
+					y2 = toOffset.y + 2;
+				} else {
+					x1 = fromOffset.x + fromCoords.width / 2;
+					y1 = fromOffset.y + 2;
+					x2 = toOffset.x + toCoords.width / 2;
+					y2 = toOffset.y + toCoords.height - 2;
+				}
+			} else {
+				if ((fromCoords.left + fromCoords.width / 2) <= (toCoords.left + toCoords.width / 2)) {
+					x1 = fromOffset.x + fromCoords.width - 2;
+					y1 = fromOffset.y + fromCoords.height / 2;
+					x2 = toOffset.x + 2;
+					y2 = toOffset.y + toCoords.height / 2;
+				} else {
+					x1 = fromOffset.x + 2;
+					y1 = fromOffset.y + fromCoords.height / 2;
+					x2 = toOffset.x + toCoords.width - 2;
+					y2 = toOffset.y + toCoords.height / 2;
+				}
+			}
+		}
+
+		if (type === "output") {
+			x1 = fromOffset.x + fromCoords.width - 2;
+			y1 = fromOffset.y + fromCoords.height / 2;
+			x2 = dropCoords.width - 5;
+			y2 = (toCoords.top - dropCoords.top) + toCoords.height / 2;
+		}
+
+		return {
+			x1: x1,
+			y1: y1,
+			x2: x2,
+			y2: y2
 		}
 	}
 
