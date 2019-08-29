@@ -151,6 +151,7 @@ export default class SchemeView extends JetView {
 			Modules: [],
 			Outputs: []
 		};
+		this.Pans = {};
 
 		this.ButtonCoordinates = {};
 
@@ -173,10 +174,10 @@ export default class SchemeView extends JetView {
 
 				pos.x = control.config.left = pos.x + context.x_offset;
 				pos.y = control.config.top = pos.y + context.y_offset;
-				if (pos.x < 0) pos.x = control.config.left = 0;
-				if (pos.x > (this.drop.$width - control.$width)) pos.x = control.config.left = this.drop.$width - control.$width;
-				if (pos.y < 0) pos.y = control.config.top = 0;
-				if (pos.y > (this.drop.$height - control.$height)) pos.y = control.config.top = this.drop.$height - control.$height;
+				//if (pos.x < 0) pos.x = control.config.left = 0;
+				//if (pos.x > (this.drop.$width - control.$width)) pos.x = control.config.left = this.drop.$width - control.$width;
+				//if (pos.y < 0) pos.y = control.config.top = 0;
+				//if (pos.y > (this.drop.$height - control.$height)) pos.y = control.config.top = this.drop.$height - control.$height;
 				setTimeout(() => {
 					window.requestAnimationFrame(() => {
 						this.rewriteLine(control.config.id, pos);
@@ -429,11 +430,28 @@ export default class SchemeView extends JetView {
 			parentTYPE: parentType
 		});
 
+		this.Pans[unitID] = panzoom($$(unitID).$view, {
+			maxZoom: 1,
+			minZoom: 0.2,
+			smoothScroll: false,
+			zoomDoubleClickSpeed: 1, 
+		});
+
+		this.Pans[unitID].on('panstart', function(e) {
+			console.log('Fired when pan is just started ', e);
+		});
+
 		$$(unitID).$view.onmousedown = (event) => {
+			for (let key in this.Pans) {
+				this.Pans[key].pause();
+			}
 			if (event.which == 1) this.ButtonCoordinates = event.target.getBoundingClientRect();
 		}
 
 		$$(unitID).$view.onmouseup = (event) => {
+			for (let key in this.Pans) {
+				this.Pans[key].resume();
+			}
 			if (
 				(event.target.getBoundingClientRect().x === this.ButtonCoordinates.x) &&
 				(event.target.getBoundingClientRect().y === this.ButtonCoordinates.y) &&
