@@ -1,32 +1,28 @@
 export const inputs_db = [
-{ id:"input1", $type:"input", label:"1(IN)", $description:"" },
-{ id:"input2", $type:"input", label:"2(IN)", $description:"" },
-{ id:"input3", $type:"input", label:"3(IN)", $description:"" }
+{ id:"input_1", $type:"input", label:"1(IN)", $description:"" },
+{ id:"input_2", $type:"input", label:"2(IN)", $description:"" },
+{ id:"input_3", $type:"input", label:"3(IN)", $description:"" },
+{ id:"input_4", $type:"input", label:"4(IN)", $description:"" },
+{ id:"input_5", $type:"input", label:"5(IN)", $description:"" },
 ];
 
-export const main_middlewares_db = [
-{ id:"main_middleware1",  $type:"main_middleware", label:"BlackFilter",  $description:"" },
-{ id:"main_middleware2",  $type:"main_middleware", label:"YellowFilter", $description:"" },
-{ id:"main_middleware3",  $type:"main_middleware", label:"WhiteFilter",  $description:"" },
-{ id:"main_middleware4",  $type:"main_middleware", label:"GreenFilter",  $description:"" },
-{ id:"main_middleware5",  $type:"main_middleware", label:"PurpleFilter", $description:"" },
-{ id:"main_middleware6",  $type:"main_middleware", label:"RedFilter",    $description:"" },
+export const modules_db = [
+{ id:"module_1",  $type:"module",  label:"BlackFilter",  $description:"" },
+{ id:"module_2",  $type:"module",  label:"YellowFilter", $description:"" },
+{ id:"module_3",  $type:"module",  label:"WhiteFilter",  $description:"" },
+{ id:"module_4",  $type:"module",  label:"GreenFilter",  $description:"" },
+{ id:"module_5",  $type:"module",  label:"PurpleFilter", $description:"" },
+{ id:"module_6",  $type:"module",  label:"RedFilter",    $description:"" },
+{ id:"module_7",  $type:"module",  label:"BlueFilter",   $description:"" },
+{ id:"module_8",  $type:"module",  label:"OrangeFilter", $description:"" },
+{ id:"module_9",  $type:"module",  label:"PinkFilter",   $description:"" },
+{ id:"module_10", $type:"module",  label:"BrownFilter",  $description:"" },
 ];
 
 export const outputs_db = [
-{ id:"output1", $type:"output", label:"1(OUT)", $description:"" },
-{ id:"output2", $type:"output", label:"2(OUT)", $description:"" },
-{ id:"output3", $type:"output", label:"3(OUT)", $description:"" },
-{ id:"output4", $type:"output", label:"4(OUT)", $description:"" },
-{ id:"output5", $type:"output", label:"1(OUT)", $description:"" },
-{ id:"output6", $type:"output", label:"2(OUT)", $description:"" },
-{ id:"output7", $type:"output", label:"3(OUT)", $description:"" },
-{ id:"output8", $type:"output", label:"4(OUT)", $description:"" },
-{ id:"output9", $type:"output", label:"1(OUT)", $description:"" },
-{ id:"output10", $type:"output", label:"2(OUT)", $description:"" },
-{ id:"output11", $type:"output", label:"3(OUT)", $description:"" },
-{ id:"output12", $type:"output", label:"4(OUT)", $description:"" },
-{ id:"output13", $type:"output", label:"2(OUT)", $description:"" },
-{ id:"output14", $type:"output", label:"3(OUT)", $description:"" },
-{ id:"output15", $type:"output", label:"4(OUT)", $description:"" }
+{ id:"output_1", $type:"output", label:"1(OUT)", $description:"" },
+{ id:"output_2", $type:"output", label:"2(OUT)", $description:"" },
+{ id:"output_3", $type:"output", label:"3(OUT)", $description:"" },
+{ id:"output_4", $type:"output", label:"4(OUT)", $description:"" },
+{ id:"output_5", $type:"output", label:"5(OUT)", $description:"" },
 ];

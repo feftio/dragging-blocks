@@ -1,6 +1,14 @@
-import {JetView} from "webix-jet";
-import {inputs_db,main_middlewares_db,outputs_db} from "models/scheme";
-import {GraphX} from "helpers/GraphX";
+import {
+	JetView
+} from "webix-jet";
+import {
+	inputs_db,
+	modules_db,
+	outputs_db
+} from "models/scheme";
+import {
+	GraphX
+} from "helpers/GraphX";
 
 export default class SchemeView extends JetView {
 
@@ -11,27 +19,23 @@ export default class SchemeView extends JetView {
 			view: "button",
 			width: 70,
 			height: 50,
-			click: function(id, event) {
-				this.$scope.clickButton(id, event);
-			}
+			$draggable: true
 		};
-		const main_middlewares_template = {
+		const modules_template = {
 			view: "button",
 			width: 100,
 			height: 100,
-			css: "webix_primary"
+			$draggable: true
 		};
 		const outputs_template = {
 			view: "button",
 			width: 70,
 			height: 50,
-			click: function(id, event) {
-				this.$scope.clickButton(id, event);
-			}
+			$draggable: true
 		};
 
 		this.inputs = [];
-		this.main_middlewares = [];
+		this.modules = [];
 		this.outputs = [];
 
 		inputs_db.forEach((value) => {
@@ -40,8 +44,8 @@ export default class SchemeView extends JetView {
 			});
 		});
 
-		main_middlewares_db.forEach((value) => {
-			this.main_middlewares.push({ ...main_middlewares_template,
+		modules_db.forEach((value) => {
+			this.modules.push({ ...modules_template,
 				...value
 			});
 		});
@@ -108,11 +112,11 @@ export default class SchemeView extends JetView {
 
 				{
 					view: "scrollview",
-					id: "main_middleware",
+					id: "module",
 					minHeight: 100,
 					scroll: "x",
 					body: {
-						cols: this.main_middlewares
+						cols: this.modules
 					}
 
 				}
@@ -125,34 +129,37 @@ export default class SchemeView extends JetView {
 		this.layer = this.$$("layer");
 		this.head = this.$$("head");
 		this.area = this.$$("area");
-		this.input = this.$$("input");
 		this.drop = this.$$("drop");
+		this.input = this.$$("input");
+		this.module = this.$$("module");
 		this.output = this.$$("output");
-		this.main_middleware = this.$$("main_middleware");
 
-		this.CountMiddlewares = 0;
-		this.CountLines = 0;
-		this.fbID = "";
+		this.fuID = "";
 		this.LinesPack = {};
 		this.ButtonsPack = {};
 		this.Graph = {};
 		this.GraphReverse = {};
+		this.Counts = {
+			Lines: 0,
+			Inputs: 0,
+			Modules: 0,
+			Outputs: 0
+		};
 		this.Queues = {
 			Lines: [],
-			Middlewares: []
+			Inputs: [],
+			Modules: [],
+			Outputs: []
 		};
 
 		this.ButtonCoordinates = {};
 
 		this.svg = this.createSVG("svg");
+		//this.g = this.createG("g");
 		this.drop.$view.appendChild(this.svg);
 
 		this.drop.$view.onclick = (event) => {
-			if (event.target === this.svg) this.focusOff(this.fbID);
-		}
-
-		window.onresize = () => {
-			console.log(this.drop.$width);
+			if (event.target === this.svg) this.focusOff(this.fuID);
 		}
 
 		webix.DragControl.addDrag(this.drop.$view, {
@@ -214,18 +221,18 @@ export default class SchemeView extends JetView {
 
 			$dragCreate: (source, ev) => {
 				const parent = webix.$$(ev);
-				if (parent && parent.config.$type && parent.config.$type === "main_middleware") {
-					let mdl = this.addMiddleware(parent);
+				if (parent && parent.config.$type && parent.config.$draggable) {
+					let unit = this.addUnit(parent);
 					let pos = webix.html.pos(ev);
-					let elC = mdl.$view.getBoundingClientRect();
+					let unitCoords = unit.$view.getBoundingClientRect();
 					let context = webix.DragControl.getContext();
 
-					context.source = [mdl.config.id];
-					context.from = this.main_middleware;
+					context.source = [unit.config.id];
+					context.from = $$(unit.config.parentTYPE);
 					context.to = this.drop;
-					context.y_offset = (pos.y - elC.top - elC.height - ev.layerY) + elC.height / 2;
-					context.x_offset = (pos.x - elC.left - elC.width - ev.layerX) + elC.width / 2;
-					return mdl.$view;
+					context.y_offset = (pos.y - unitCoords.top - unitCoords.height - ev.layerY) + unitCoords.height / 2;
+					context.x_offset = (pos.x - unitCoords.left - unitCoords.width - ev.layerX) + unitCoords.width / 2;
+					return unit.$view;
 				}
 				return false;
 			}
@@ -276,9 +283,7 @@ export default class SchemeView extends JetView {
 						minHeight: 100,
 						height: 100,
 						scroll: "x",
-						body: {
-							//id:"listDemoWin"
-						}
+						body: {}
 					},
 
 					{
@@ -295,29 +300,29 @@ export default class SchemeView extends JetView {
 	}
 
 	focusOff() {
-		if ((this.fbID) || (this.fbID.length !== 0)) {
-			webix.html.removeCss($$(this.fbID).getNode(), "webix_danger");
-			this.fbID = "";
+		if ((this.fuID) || (this.fuID.length !== 0)) {
+			webix.html.removeCss($$(this.fuID).getNode(), "webix_danger");
+			this.fuID = "";
 		}
 	}
 
-	focusOn(tbID) {
-		if ((tbID) || (tbID.length !== 0)) {
-			webix.html.addCss($$(tbID).getNode(), "webix_danger");
-			this.fbID = tbID;
+	focusOn(tuID) {
+		if ((tuID) || (tuID.length !== 0)) {
+			webix.html.addCss($$(tuID).getNode(), "webix_danger");
+			this.fuID = tuID;
 		}
 	}
 
-	focusChange(tbID) {
+	focusChange(tuID) {
 		this.focusOff();
-		this.focusOn(tbID);
+		this.focusOn(tuID);
 	}
 
 	angleVectors(v1, v2) {
 		return Math.acos(((v1.x * v2.x) + (v1.y * v2.y)) / (Math.sqrt((v1.x * v1.x) + (v1.y * v1.y)) * Math.sqrt((v2.x * v2.x) + (v2.y * v2.y)))) * 180 / Math.PI;
 	}
 
-	createLine(lnC, lnID) {
+	createLine(lnID, lnC) {
 		let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
 		line.setAttribute("id", lnID);
 		line.setAttribute("type", "line");
@@ -345,167 +350,146 @@ export default class SchemeView extends JetView {
 		return svg;
 	}
 
-	addLine(tbID, event) {
-		let fbID = this.fbID;
+	addLine(fuID, tuID, event) {
+		if (((fuID) || (fuID.length !== 0)) && (fuID !== tuID)) {
+			let lnID, lnC;
+			let fromID, toID;
+			let fromUnit, toUnit, drop;
 
-		if (((fbID) || (fbID.length !== 0)) && (fbID !== tbID)) {
-			let Tbutton = $$(tbID);
-			let Fbutton = $$(fbID);
+			fromID = fuID;
+			toID = tuID;
 
-			let tgC = Tbutton.$view.getBoundingClientRect();
-			let fcC = Fbutton.$view.getBoundingClientRect();
-			let drC = this.drop.$view.getBoundingClientRect();
+			fromUnit = $$(fromID);
+			toUnit = $$(toID);
+			drop = this.drop;
 
-			let Ttype = Tbutton.config.$type;
-			let Ftype = Fbutton.config.$type;
-
-			let x1;
-			let y1;
-			let x2;
-			let y2;
 
 			if (Object.keys(this.LinesPack).length > 0) {
 				for (let key in this.LinesPack) {
 					let value = this.LinesPack[key];
-					if ((value.indexOf(tbID) >= 0) && (value.indexOf(fbID) >= 0)) {
+					if ((value.indexOf(fromID) >= 0) && (value.indexOf(toID) >= 0)) {
 						return;
 					}
 				}
 			}
 
-			if ((Ftype) && (Ftype === "input")) {
-				if (Ttype === "input") {
-					this.focusChange(tbID);
-					return;
-				}
+			lnC = this.getLineCoords({
+				x: fromUnit.$view.offsetLeft,
+				y: fromUnit.$view.offsetTop
+			}, {
+				x: toUnit.$view.offsetLeft,
+				y: toUnit.$view.offsetTop
+			}, {
+				fromCoords: fromUnit.$view.getBoundingClientRect(),
+				toCoords: toUnit.$view.getBoundingClientRect(),
+				dropCoords: drop.$view.getBoundingClientRect()
+			});
 
-				if (Ttype === "middleware") {
-					x1 = 1;
-					y1 = (fcC.top - drC.top) + fcC.height / 2;
-					x2 = Tbutton.$view.offsetLeft + 2;
-					y2 = Tbutton.$view.offsetTop + tgC.height / 2;
-				}
+			lnID = this.nextLineID();
 
-				if (Ttype === "output") {
-					x1 = -1;
-					y1 = (fcC.top - drC.top) + fcC.height / 2;
-					x2 = drC.width - 5;
-					y2 = (tgC.top - drC.top) + tgC.height / 2;
-				}
-			}
-
-			if ((Ftype) && (Ftype === "middleware")) {
-				let obj = this.rewriteM(Ttype, {x: Fbutton.$view.offsetLeft, y: Fbutton.$view.offsetTop}, {x: Tbutton.$view.offsetLeft, y: Tbutton.$view.offsetTop}, {tgC: fcC, cnC: tgC, drC: drC});
-				x1 = obj.x1;
-				y1 = obj.y1;
-				x2 = obj.x2;
-				y2 = obj.y2;
-			}
-
-			if ((Ftype) && (Ftype === "output")) {
-				if (Ttype === "input") {
-					x1 = drC.width + 2;
-					y1 = (fcC.top - drC.top) + fcC.height / 2;
-					x2 = 1;
-					y2 = (tgC.top - drC.top) + tgC.height / 2;
-				}
-
-				if (Ttype === "middleware") {
-					x1 = drC.width - 1;
-					y1 = (fcC.top - drC.top) + fcC.height / 2;
-					x2 = Tbutton.$view.offsetLeft + tgC.width - 2;
-					y2 = Tbutton.$view.offsetTop + tgC.height / 2;
-				}
-
-				if (Ttype === "output") {
-					this.focusChange(tbID);
-					return;
-				}
-			}
-
-			let lnID = this.nextlnID();
-
-			this.svg.appendChild(this.createLine({
-				x1: x1,
-				y1: y1,
-				x2: x2,
-				y2: y2
-			}, lnID));
-			this.addConnections(tbID, lnID, fbID);
+			this.svg.appendChild(this.createLine(lnID, {
+				x1: lnC.x1,
+				y1: lnC.y1,
+				x2: lnC.x2,
+				y2: lnC.y2
+			}));
+			this.addConnections(fromID, lnID, toID);
 			this.focusOff();
 		}
 	}
 
-	addMiddleware(parent) {
-		let mdID = this.nextmdID();
-		let prC = parent.$view.getBoundingClientRect();
+	addUnit(parent) {
+		let width, height, css;
+		let parentCoords = parent.$view.getBoundingClientRect();
+		let parentType = parent.config.$type;
+		let unitType = "d_" + parentType;
+		let unitID = this.nextUnitID(parentType);
+
+		if (parentType !== "module") {
+			width = 70;
+			height = 50;
+			css = "webix_primary";
+		} else {
+			width = 100;
+			height = 50;
+			css = "webix_primary";
+		}
 
 		this.drop.addView({
 			view: "button",
-			id: mdID,
-			$type: "middleware",
+			id: unitID,
+			$type: unitType,
 			label: parent.config.label,
-			top: prC.top,
-			left: prC.left,
-			width: 100,
-			height: 50,
-			css: "webix_primary",
-			parentId: parent.config.id
+			top: parentCoords.top,
+			left: parentCoords.left,
+			width: width,
+			height: height,
+			css: css,
+			parentID: parent.config.id,
+			parentTYPE: parentType
 		});
 
-		$$(mdID).$view.onmousedown = (event) => {
+		$$(unitID).$view.onmousedown = (event) => {
 			if (event.which == 1) this.ButtonCoordinates = event.target.getBoundingClientRect();
 		}
 
-		$$(mdID).$view.onmouseup = (event) => {
+		$$(unitID).$view.onmouseup = (event) => {
 			if (
 				(event.target.getBoundingClientRect().x === this.ButtonCoordinates.x) &&
 				(event.target.getBoundingClientRect().y === this.ButtonCoordinates.y) &&
 				(event.which == 1)
 			) {
-				this.clickButton(mdID, event);
+				this.clickButton(unitID, event);
 			}
 		}
-		return $$(mdID);
+		return $$(unitID);
 	}
 
-	clickButton(tbID, event) {
-		let fbID = this.fbID;
-		if ((!fbID) || (fbID.length === 0)) {
-			this.focusOn(tbID);
+	clickButton(tuID, event) {
+		let fuID = this.fuID;
+		if ((!fuID) || (fuID.length === 0)) {
+			this.focusOn(tuID);
 		} else {
-			if (fbID !== tbID) {
-				this.addLine(tbID, event);
+			if (fuID !== tuID) {
+				this.addLine(fuID, tuID, event);
 			} else {
 				this.focusOff();
 			}
 		}
 	}
 
-	rewriteLine(tbID, pos) {
-		let Tbutton = $$(tbID);
-		let Ttype = Tbutton.config.$type;
+	rewriteLine(tuID, pos) {
+		if (this.ButtonsPack.hasOwnProperty(tuID)) {
+			let line;
+			let lnID, lnC;
+			let fromID, toID;
+			let fromUnit, toUnit, drop;
 
-		if ((Ttype) && (Ttype === "middleware") && (this.ButtonsPack.hasOwnProperty(tbID))) {
-			this.ButtonsPack[tbID].forEach((lnID) => {
-				let line = document.getElementById(lnID);
-				let tgC = Tbutton.$view.getBoundingClientRect();
-				let drC = this.drop.$view.getBoundingClientRect();
-
-				let cbID, Cbutton, Ctype, cnC;
-
-				this.LinesPack[lnID].forEach(function(value) {
-					if (value !== tbID) {
-						cbID = value;
-						Cbutton = $$(cbID);
-						Ctype = Cbutton.config.$type;
-						cnC = Cbutton.$view.getBoundingClientRect();
+			this.ButtonsPack[tuID].forEach((lnID) => {
+				this.LinesPack[lnID].forEach(function(uID) {
+					if (uID !== tuID) {
+						fromID = tuID;
+						toID = uID;
 					}
 				});
 
-				let lnC = this.rewriteM(Ctype, pos, {x: Cbutton.$view.offsetLeft, y: Cbutton.$view.offsetTop}, {tgC: tgC, cnC: cnC, drC: drC});
+				fromUnit = $$(fromID);
+				toUnit = $$(toID);
+				drop = this.drop;
+				line = document.getElementById(lnID);
+				lnC = this.getLineCoords({
+					x: pos.x,
+					y: pos.y
+				}, {
+					x: toUnit.$view.offsetLeft,
+					y: toUnit.$view.offsetTop
+				}, {
+					fromCoords: fromUnit.$view.getBoundingClientRect(),
+					toCoords: toUnit.$view.getBoundingClientRect(),
+					dropCoords: drop.$view.getBoundingClientRect()
+				});
 
-				if ((tbID in this.Graph) && (this.Graph[tbID].indexOf(cbID) >= 0)) {
+				if ((fromID in this.Graph) && (this.Graph[fromID].indexOf(toID) >= 0)) {
 					line.setAttribute("x1", lnC.x1);
 					line.setAttribute("y1", lnC.y1);
 					line.setAttribute("x2", lnC.x2);
@@ -520,64 +504,47 @@ export default class SchemeView extends JetView {
 		}
 	}
 
-	rewriteM(type, fromOffset, toOffset, coords)
-	{
-		let fromCoords = coords.tgC;
-		let toCoords = coords.cnC;
-		let dropCoords = coords.drC;
+	getLineCoords(fromOffset, toOffset, coords) {
+		let fromCoords = coords.fromCoords;
+		let toCoords = coords.toCoords;
+		let dropCoords = coords.dropCoords;
 
 		let x1, y1, x2, y2;
 
-		if (type === "input") {
-			x1 = fromOffset.x + 2;
-			y1 = fromOffset.y + fromCoords.height / 2;
-			x2 = 1;
-			y2 = (toCoords.top - dropCoords.top) + toCoords.height / 2;
-		}
+		let v1 = {};
+		let v2 = {};
+		let angle;
 
-		if (type === "middleware") {
-			let v1 = {};
-			let v2 = {};
-			let angle;
+		v1.x = (fromCoords.left + fromCoords.width / 2) - (toCoords.left + toCoords.width / 2);
+		v1.y = (fromCoords.top + fromCoords.height / 2) - (toCoords.top + toCoords.height / 2);
+		v2.x = (0) - (toCoords.left + toCoords.width / 2);
+		v2.y = (0);
+		angle = this.angleVectors(v1, v2);
 
-			v1.x = (fromCoords.left + fromCoords.width / 2) - (toCoords.left + toCoords.width / 2);
-			v1.y = (fromCoords.top + fromCoords.height / 2) - (toCoords.top + toCoords.height / 2);
-			v2.x = (0) - (toCoords.left + toCoords.width / 2);
-			v2.y = (0);
-			angle = this.angleVectors(v1, v2);
-
-			if (((angle >= 45) && (angle <= 135))) {
-				if ((fromCoords.top + fromCoords.height / 2) <= (toCoords.top + toCoords.height / 2)) {
-					x1 = fromOffset.x + fromCoords.width / 2;
-					y1 = fromOffset.y + fromCoords.height - 2;
-					x2 = toOffset.x + toCoords.width / 2;
-					y2 = toOffset.y + 2;
-				} else {
-					x1 = fromOffset.x + fromCoords.width / 2;
-					y1 = fromOffset.y + 2;
-					x2 = toOffset.x + toCoords.width / 2;
-					y2 = toOffset.y + toCoords.height - 2;
-				}
+		if (((angle >= 45) && (angle <= 135))) {
+			if ((fromCoords.top + fromCoords.height / 2) <= (toCoords.top + toCoords.height / 2)) {
+				x1 = fromOffset.x + fromCoords.width / 2;
+				y1 = fromOffset.y + fromCoords.height - 2;
+				x2 = toOffset.x + toCoords.width / 2;
+				y2 = toOffset.y + 2;
 			} else {
-				if ((fromCoords.left + fromCoords.width / 2) <= (toCoords.left + toCoords.width / 2)) {
-					x1 = fromOffset.x + fromCoords.width - 2;
-					y1 = fromOffset.y + fromCoords.height / 2;
-					x2 = toOffset.x + 2;
-					y2 = toOffset.y + toCoords.height / 2;
-				} else {
-					x1 = fromOffset.x + 2;
-					y1 = fromOffset.y + fromCoords.height / 2;
-					x2 = toOffset.x + toCoords.width - 2;
-					y2 = toOffset.y + toCoords.height / 2;
-				}
+				x1 = fromOffset.x + fromCoords.width / 2;
+				y1 = fromOffset.y + 2;
+				x2 = toOffset.x + toCoords.width / 2;
+				y2 = toOffset.y + toCoords.height - 2;
 			}
-		}
-
-		if (type === "output") {
-			x1 = fromOffset.x + fromCoords.width - 2;
-			y1 = fromOffset.y + fromCoords.height / 2;
-			x2 = dropCoords.width - 5;
-			y2 = (toCoords.top - dropCoords.top) + toCoords.height / 2;
+		} else {
+			if ((fromCoords.left + fromCoords.width / 2) <= (toCoords.left + toCoords.width / 2)) {
+				x1 = fromOffset.x + fromCoords.width - 2;
+				y1 = fromOffset.y + fromCoords.height / 2;
+				x2 = toOffset.x + 2;
+				y2 = toOffset.y + toCoords.height / 2;
+			} else {
+				x1 = fromOffset.x + 2;
+				y1 = fromOffset.y + fromCoords.height / 2;
+				x2 = toOffset.x + toCoords.width - 2;
+				y2 = toOffset.y + toCoords.height / 2;
+			}
 		}
 
 		return {
@@ -588,28 +555,28 @@ export default class SchemeView extends JetView {
 		}
 	}
 
-	addConnections(tbID, lnID, fbID) {
-		this.LinesPack[lnID] = [fbID, tbID];
+	addConnections(fromID, lnID, toID) {
+		this.LinesPack[lnID] = [fromID, toID];
 
-		if (this.ButtonsPack.hasOwnProperty(fbID))
-			this.ButtonsPack[fbID].push(lnID);
+		if (this.ButtonsPack.hasOwnProperty(fromID))
+			this.ButtonsPack[fromID].push(lnID);
 		else
-			this.ButtonsPack[fbID] = [lnID];
+			this.ButtonsPack[fromID] = [lnID];
 
-		if (this.ButtonsPack.hasOwnProperty(tbID))
-			this.ButtonsPack[tbID].push(lnID);
+		if (this.ButtonsPack.hasOwnProperty(toID))
+			this.ButtonsPack[toID].push(lnID);
 		else
-			this.ButtonsPack[tbID] = [lnID];
+			this.ButtonsPack[toID] = [lnID];
 
-		if (this.Graph.hasOwnProperty(fbID))
-			this.Graph[fbID].push(tbID);
+		if (this.Graph.hasOwnProperty(fromID))
+			this.Graph[fromID].push(toID);
 		else
-			this.Graph[fbID] = [tbID];
+			this.Graph[fromID] = [toID];
 
-		if (this.GraphReverse.hasOwnProperty(tbID))
-			this.GraphReverse[tbID].push(fbID);
+		if (this.GraphReverse.hasOwnProperty(toID))
+			this.GraphReverse[toID].push(fromID);
 		else
-			this.GraphReverse[tbID] = [fbID];
+			this.GraphReverse[toID] = [fromID];
 	}
 
 	removeConnectionsByLine(lnID) {
@@ -645,20 +612,31 @@ export default class SchemeView extends JetView {
 		if (this.LinesPack.hasOwnProperty(lnID)) delete this.LinesPack[lnID];
 	}
 
-	removeConnectionsByButton(btID) {
-
+	nextUnitID(type) {
+		let prefix, href;
+		switch (type) {
+			case "input":
+				prefix = "d_input_";
+				href = "Inputs";
+				break;
+			case "module":
+				prefix = "d_module_";
+				href = "Modules";
+				break;
+			case "output":
+				prefix = "d_output_";
+				href = "Outputs";
+				break;
+		}
+		if (this.Queues[href].length !== 0) return this.Queues[href].shift();
+		this.Counts[href]++;
+		return prefix + this.Counts[href];
 	}
 
-	nextlnID() {
+	nextLineID() {
 		if (this.Queues.Lines.length !== 0) return this.Queues.Lines.shift();
-		this.CountLines++;
-		return "line" + this.CountLines;
-	}
-
-	nextmdID() {
-		if (this.Queues.Middlewares.length !== 0) return this.Queues.Middlewares.shift();
-		this.CountMiddlewares++;
-		return "middleware" + this.CountMiddlewares;
+		this.Counts.Lines++;
+		return "line" + this.Counts.Lines;
 	}
 
 	getResult() {
@@ -666,14 +644,14 @@ export default class SchemeView extends JetView {
 		let vertexes = [];
 		let result;
 		let result_string;
-
 		for (let key in this.Graph) {
-			if ($$(key).config.$type === "input") {
+			if ($$(key).config.$type === "d_input") {
 				vertexes.push(key);
 			}
 		}
 		result = graph.getPaths(vertexes);
-		console.dir(result);
+
+		//console.dir(result);
 
 		result.forEach(function(value, index) {
 			let CountWays = index + 1;
