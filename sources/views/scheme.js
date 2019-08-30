@@ -34,6 +34,9 @@ export default class SchemeView extends JetView {
 			$draggable: true
 		};
 
+		if (!webix.env.touch && webix.env.scrollSize)
+        webix.CustomScroll.init();
+
 		this.inputs = [];
 		this.modules = [];
 		this.outputs = [];
@@ -78,13 +81,14 @@ export default class SchemeView extends JetView {
 				{
 					view: "scrollview",
 					id: "area",
-					scroll: "y",
+					scroll: false,
 					body: {
 						cols: [{
-								view: "layout",
+								view: "scrollview",
 								id: "input",
 								width: 70,
-								rows: this.inputs
+								scroll: "y",
+								body: {rows: this.inputs}
 							},
 
 							{
@@ -101,10 +105,11 @@ export default class SchemeView extends JetView {
 							},
 
 							{
-								view: "layout",
+								view: "scrollview",
 								id: "output",
 								width: 70,
-								rows: this.outputs
+								scroll: "y",
+								body: {rows: this.outputs}
 							}
 						]
 					},

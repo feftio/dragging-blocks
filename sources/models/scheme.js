@@ -24,5 +24,5 @@ export const outputs_db = [
 { id:"output_2", $type:"output", label:"2(OUT)", $description:"" },
 { id:"output_3", $type:"output", label:"3(OUT)", $description:"" },
 { id:"output_4", $type:"output", label:"4(OUT)", $description:"" },
-{ id:"output_5", $type:"output", label:"5(OUT)", $description:"" },
+{ id:"output_5", $type:"output", label:"5(OUT)", $description:"" }
 ];
