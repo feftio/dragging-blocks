@@ -171,6 +171,10 @@ export default class SchemeView extends JetView {
 			if (event.target === this.svg) this.focusOff(this.fuID);
 		}
 
+		window.onresize = (event) => {
+			if (!$$("resultWindow").config.hidden) this.resizeResultWindow();
+		}
+
 		webix.DragControl.addDrag(this.drop.$view, {
 			$dragDestroy: () => {
 				return false;
@@ -288,7 +292,7 @@ export default class SchemeView extends JetView {
 
 					{
 						view: "scrollview",
-						id: "listDemo",
+						id: "listSelected",
 						minHeight: 100,
 						height: 100,
 						scroll: "x",
@@ -320,6 +324,9 @@ export default class SchemeView extends JetView {
 			webix.html.addCss($$(tuID).getNode(), "webix_danger");
 			this.fuID = tuID;
 		}
+		this.head.addView({
+
+		});
 	}
 
 	focusChange(tuID) {
@@ -437,6 +444,8 @@ export default class SchemeView extends JetView {
 			$parentID: parent.config.id,
 			$parentTYPE: parentType
 		});
+
+		$$(unitID).$view.firstChild.firstChild.style.transition = "0.15s ease-in-out";
 
 		$$(unitID).$view.onmousedown = (event) => {
 			if (event.which == 1) this.ButtonCoordinates = event.target.getBoundingClientRect();
@@ -659,7 +668,7 @@ export default class SchemeView extends JetView {
 			}
 		}
 
-		result = graph.getPaths(vertexes); //Take the Paths of Orient Graph
+		result = graph.getPaths(vertexes);
 
 		result.forEach(function(value, index) {
 			value.forEach(function(v, i) {
@@ -679,6 +688,10 @@ export default class SchemeView extends JetView {
 
 		$$("listWays").sort("#num#", "asc", "int");
 
+		this.resizeResultWindow();
+	}
+
+	resizeResultWindow() {
 		$$("resultWindow").define({
 			width: window.innerWidth / 100 * 70,
 			height: window.innerHeight / 100 * 70,
