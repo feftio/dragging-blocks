@@ -35,7 +35,7 @@ export default class SchemeView extends JetView {
 		};
 
 		if (!webix.env.touch && webix.env.scrollSize)
-        webix.CustomScroll.init();
+			webix.CustomScroll.init();
 
 		this.inputs = [];
 		this.modules = [];
@@ -88,7 +88,9 @@ export default class SchemeView extends JetView {
 								id: "input",
 								width: 70,
 								scroll: "y",
-								body: {rows: this.inputs}
+								body: {
+									rows: this.inputs
+								}
 							},
 
 							{
@@ -109,7 +111,9 @@ export default class SchemeView extends JetView {
 								id: "output",
 								width: 70,
 								scroll: "y",
-								body: {rows: this.outputs}
+								body: {
+									rows: this.outputs
+								}
 							}
 						]
 					},
@@ -233,7 +237,7 @@ export default class SchemeView extends JetView {
 					let context = webix.DragControl.getContext();
 
 					context.source = [unit.config.id];
-					context.from = $$(unit.config.parentTYPE);
+					context.from = $$(unit.config.$parentTYPE);
 					context.to = this.drop;
 					context.y_offset = (pos.y - unitCoords.top - unitCoords.height - ev.layerY) + unitCoords.height / 2;
 					context.x_offset = (pos.x - unitCoords.left - unitCoords.width - ev.layerX) + unitCoords.width / 2;
@@ -430,8 +434,8 @@ export default class SchemeView extends JetView {
 			width: width,
 			height: height,
 			css: css,
-			parentID: parent.config.id,
-			parentTYPE: parentType
+			$parentID: parent.config.id,
+			$parentTYPE: parentType
 		});
 
 		$$(unitID).$view.onmousedown = (event) => {
@@ -648,22 +652,27 @@ export default class SchemeView extends JetView {
 		let graph = new GraphX(this.Graph);
 		let vertexes = [];
 		let result;
-		let result_string;
+
 		for (let key in this.Graph) {
 			if ($$(key).config.$type === "d_input") {
 				vertexes.push(key);
 			}
 		}
-		result = graph.getPaths(vertexes);
 
-		//console.dir(result);
+		result = graph.getPaths(vertexes); //Take the Paths of Orient Graph
+
+		result.forEach(function(value, index) {
+			value.forEach(function(v, i) {
+				result[index][i] = $$(v).config.$parentID || v;
+			});
+		});
 
 		result.forEach(function(value, index) {
 			let CountWays = index + 1;
 			$$("listWays").add({
 				id: "way" + CountWays,
 				num: CountWays,
-				title: CountWays + ") " + value.join(" -> "),
+				title: CountWays + ") (" + value.join(") -> (") + ")",
 				array: value
 			}, 0);
 		});
@@ -671,10 +680,10 @@ export default class SchemeView extends JetView {
 		$$("listWays").sort("#num#", "asc", "int");
 
 		$$("resultWindow").define({
-			width: window.innerWidth / 100 * 50,
-			height: window.innerHeight / 100 * 50,
-			minWidth: window.innerWidth / 100 * 50,
-			minHeight: window.innerHeight / 100 * 50,
+			width: window.innerWidth / 100 * 70,
+			height: window.innerHeight / 100 * 70,
+			minWidth: window.innerWidth / 100 * 70,
+			minHeight: window.innerHeight / 100 * 70,
 		});
 		$$("resultWindow").resize();
 		$$("resultWindow").show();
