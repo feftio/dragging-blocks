@@ -89,3 +89,8 @@ line {
 line:hover {
     stroke-width: 4;
 }
+
+/*.custom_button_style .webix_button {
+    background: #990000;
+    color: #1CA1C1;
+}*/

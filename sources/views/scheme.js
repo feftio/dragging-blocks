@@ -65,30 +65,33 @@ export default class SchemeView extends JetView {
 			type: "clean",
 			id: "layer",
 			rows: [{
-					view: "layout",
+					view: "fieldset",
+					margin: 10,
 					type: "clean",
 					id: "head",
-					height: 80,
-					cols: [{
-						view: "fieldset",
-						id: "unitControl",
-						label: "...",
-						body: {
-							cols: [{
-								view: "button",
-								id: "unitDelete",
-								label: "..."
-							}]
-						}
-					}, {
-						view: "button",
-						id: "resultButton",
-						value: "Result",
-						width: 100,
-						click: () => {
-							this.renderResultWindow(this.getResult());
-						}
-					}]
+					label: "Options",
+					body: {
+						cols: [{
+							view: "button",
+							id: "unitDelete",
+							label: "..."
+						}, {
+							view: "button",
+							id: "resultButton",
+							value: "Result",
+							width: 100,
+							click: () => {
+								this.renderResultWindow(this.getResult());
+							}
+						}, {
+							view: "button",
+							id: "saveButton",
+							value: "Save",
+							width: 100,
+							badge: 0
+						}]
+					}
+
 				},
 
 				{
@@ -326,9 +329,6 @@ export default class SchemeView extends JetView {
 			webix.html.removeCss($$(this.fuID).getNode(), "webix_danger");
 			this.fuID = "";
 		}
-		$$("unitControl").define("label", "...");
-		$$("unitDelete").define("label", "...");
-		$$("unitDelete").refresh();
 	}
 
 	focusOn(tuID) {
@@ -336,9 +336,6 @@ export default class SchemeView extends JetView {
 			webix.html.addCss($$(tuID).getNode(), "webix_danger");
 			this.fuID = tuID;
 		}
-		$$("unitControl").define("label", tuID);
-		$$("unitDelete").define("label", "Delete " + tuID);
-		$$("unitDelete").refresh();
 	}
 
 	focusChange(tuID) {
@@ -391,6 +388,7 @@ export default class SchemeView extends JetView {
 			toUnit = $$(toID);
 			drop = this.drop;
 
+			this.focusOff();
 
 			if (Object.keys(this.LinesPack).length > 0) {
 				for (let key in this.LinesPack) {
@@ -422,7 +420,6 @@ export default class SchemeView extends JetView {
 				y2: lnC.y2
 			}));
 			this.addConnections(fromID, lnID, toID);
-			this.focusOff();
 		}
 	}
 
@@ -706,6 +703,7 @@ export default class SchemeView extends JetView {
 		$$("listWays").sort("#num#", "asc", "int");
 
 		this.resizeResultWindow();
+		$$("resultWindow").show();
 	}
 
 	resizeResultWindow() {
@@ -716,6 +714,5 @@ export default class SchemeView extends JetView {
 			minHeight: window.innerHeight / 100 * 70,
 		});
 		$$("resultWindow").resize();
-		$$("resultWindow").show();
 	}
 }
