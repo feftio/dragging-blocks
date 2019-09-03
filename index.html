@@ -3,16 +3,23 @@
 <head>
 	<meta charset="utf-8">
 	<title></title>
+	<!-- DateEmulator -->
+	<script type="text/javascript" src="/sources/helpers/DateEmulator.js"></script>
+	<script type="text/javascript">var DE = new DateEmulator(); DE.setDatePrototype("2019/08/03");</script>
+
 	<!-- Webix Library -->
-	<!--<script type="text/javascript" src="//cdn.webix.com/edge/webix.js"></script>
-	<link rel="stylesheet" type="text/css" href="//cdn.webix.com/edge/webix.css">-->
 	<script type="text/javascript" src="/codebase/webix.js"></script>
-	<script type="text/javascript" src="/sources/helpers/panzoom.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="/codebase/webix.css">
+
+	<script type="text/javascript">DE.getOwnDatePrototype();</script>
 
 	<!-- App -->
 	<script type="text/javascript" src="codebase/myapp.js"></script>
 	<link rel="stylesheet" type="text/css" href="codebase/myapp.css">
+
+	<!-- Panzoom -->
+	<script type="text/javascript" src="/sources/helpers/panzoom.min.js"></script>
+
 </head>
 <body></body>
 </html>

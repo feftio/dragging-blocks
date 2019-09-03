@@ -65,15 +65,28 @@ export default class SchemeView extends JetView {
 			type: "clean",
 			id: "layer",
 			rows: [{
+					view: "layout",
+					type: "clean",
 					id: "head",
-					height: 70,
-					rows: [{
+					height: 80,
+					cols: [{
+						view: "fieldset",
+						id: "unitControl",
+						label: "...",
+						body: {
+							cols: [{
+								view: "button",
+								id: "unitDelete",
+								label: "..."
+							}]
+						}
+					}, {
 						view: "button",
-						id: "result",
+						id: "resultButton",
 						value: "Result",
-						height: 65,
+						width: 100,
 						click: () => {
-							this.getResult();
+							this.renderResultWindow(this.getResult());
 						}
 					}]
 				},
@@ -160,17 +173,13 @@ export default class SchemeView extends JetView {
 			Modules: [],
 			Outputs: []
 		};
-
 		this.ButtonCoordinates = {};
 
 		this.svg = this.createSVG("svg");
-		//this.g = this.createG("g");
 		this.drop.$view.appendChild(this.svg);
-
 		this.drop.$view.onclick = (event) => {
 			if (event.target === this.svg) this.focusOff(this.fuID);
 		}
-
 		window.onresize = (event) => {
 			if (!$$("resultWindow").config.hidden) this.resizeResultWindow();
 		}
@@ -317,6 +326,9 @@ export default class SchemeView extends JetView {
 			webix.html.removeCss($$(this.fuID).getNode(), "webix_danger");
 			this.fuID = "";
 		}
+		$$("unitControl").define("label", "...");
+		$$("unitDelete").define("label", "...");
+		$$("unitDelete").refresh();
 	}
 
 	focusOn(tuID) {
@@ -324,9 +336,9 @@ export default class SchemeView extends JetView {
 			webix.html.addCss($$(tuID).getNode(), "webix_danger");
 			this.fuID = tuID;
 		}
-		this.head.addView({
-
-		});
+		$$("unitControl").define("label", tuID);
+		$$("unitDelete").define("label", "Delete " + tuID);
+		$$("unitDelete").refresh();
 	}
 
 	focusChange(tuID) {
@@ -495,6 +507,7 @@ export default class SchemeView extends JetView {
 				toUnit = $$(toID);
 				drop = this.drop;
 				line = document.getElementById(lnID);
+
 				lnC = this.getLineCoords({
 					x: pos.x,
 					y: pos.y
@@ -676,6 +689,10 @@ export default class SchemeView extends JetView {
 			});
 		});
 
+		return result;
+	}
+
+	renderResultWindow(result) {
 		result.forEach(function(value, index) {
 			let CountWays = index + 1;
 			$$("listWays").add({
