@@ -4447,49 +4447,56 @@ span.webix_sidebar_dir_icon {
   color: #404040;
   background-color: #fff;
 }
-.webix_dbllist .webix_list {
-  background: #ededed;
+.webix_dbllist .bottom_label {
+  text-align: center;
+  font-size: 10px;
+}
+.webix_dbllist .webix_list,
+.webix_dbllist .bottom_label {
+  background: #222222;
 }
 .webix_dbllist .webix_list_item {
-  background: white;
+  background: #393939;
   margin: 3px 4px 0px 4px;
   box-sizing: border-box;
+  border: 1px solid #818181;
 }
 .webix_dbllist .webix_list_item.webix_selected {
-  color: #FFFFFF;
-  background: #27ae60;
+  border-bottom-color: #818181;
+  background-color: #1F884C;
+  color: #fff;
 }
-.webix_dbllist button {
+.webix_dbllist .dbllist_button {
   width: 45%;
   height: 30px;
   margin-top: 4px;
   padding: 0;
-  background: #ff5cff;
   border-radius: 2px;
   border: 1px solid #818181;
   cursor: pointer;
   font-size: 15px;
   font-family: 'PT Sans', Tahoma;
+  background-color: #800080;
 }
-.webix_dbllist button:active {
-  box-shadow: inset 1px 1px 0px silver;
-}
-.webix_dbllist button .webix_icon {
-  color: #888;
+.webix_dbllist .dbllist_button .webix_icon {
+  color: #fff;
   font-size: 20px;
+  width: 26px;
 }
-.webix_dbllist button:first-child {
+.webix_dbllist .dbllist_button:active {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+.webix_dbllist .dbllist_button:first-child {
   margin-top: 36px;
   margin-right: 4px;
 }
-.webix_dbllist button:last-child {
+.webix_dbllist .dbllist_button:last-child {
   margin-left: 4px;
 }
-.webix_dbllist .bottom_label {
-  font-size: 10px;
-  text-transform: uppercase;
-  background: #ededed;
-  padding-left: 13px;
+.webix_dbllist .dbllist_button:hover,
+.webix_dbllist .dbllist_button:focus,
+.webix_dbllist .dbllist_button:active {
+  background-color: #b300b3;
 }
 .webix_invalid .webix_list {
   background: #f8e2e2;
@@ -4966,6 +4973,13 @@ body.webix_print {
 }
 .webix_dataview_item.tiles.webix_selected .webix_dataview_inner_item {
   border-color: #1F884C;
+}
+.webix_dbllist .dbllist_button {
+  border-color: #cd00cc;
+  color: #fff;
+}
+.webix_dbllist .bottom_label {
+  text-transform: uppercase;
 }
 .webix_list_item.webix_invalid,
 .webix_tree_item.webix_invalid,

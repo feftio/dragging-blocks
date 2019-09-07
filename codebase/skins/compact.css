@@ -5010,49 +5010,56 @@ span.webix_sidebar_dir_icon {
   color: #404040;
   background-color: #fff;
 }
-.webix_dbllist .webix_list {
+.webix_dbllist .bottom_label {
+  text-align: center;
+  font-size: 10px;
+}
+.webix_dbllist .webix_list,
+.webix_dbllist .bottom_label {
   background: #ededed;
 }
 .webix_dbllist .webix_list_item {
-  background: white;
+  background: #fff;
   margin: 3px 4px 0px 4px;
   box-sizing: border-box;
+  border: 1px solid #DDDDDD;
 }
 .webix_dbllist .webix_list_item.webix_selected {
+  border-bottom-color: #DDDDDD;
+  background-color: #27ae60;
   color: #FFFFFF;
-  background: #27ae60;
 }
-.webix_dbllist button {
+.webix_dbllist .dbllist_button {
   width: 45%;
   height: 30px;
   margin-top: 4px;
   padding: 0;
-  background: #eef7fc;
   border-radius: 6px;
   border: 1px solid #DDDDDD;
   cursor: pointer;
   font-size: 13px;
   font-family: 'PT Sans', Tahoma;
+  background-color: #eef7fc;
 }
-.webix_dbllist button:active {
-  box-shadow: inset 1px 1px 0px silver;
-}
-.webix_dbllist button .webix_icon {
+.webix_dbllist .dbllist_button .webix_icon {
   color: #888;
   font-size: 20px;
+  width: 26px;
 }
-.webix_dbllist button:first-child {
+.webix_dbllist .dbllist_button:active {
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+.webix_dbllist .dbllist_button:first-child {
   margin-top: 28px;
   margin-right: 4px;
 }
-.webix_dbllist button:last-child {
+.webix_dbllist .dbllist_button:last-child {
   margin-left: 4px;
 }
-.webix_dbllist .bottom_label {
-  font-size: 10px;
-  text-transform: uppercase;
-  background: #ededed;
-  padding-left: 13px;
+.webix_dbllist .dbllist_button:hover,
+.webix_dbllist .dbllist_button:focus,
+.webix_dbllist .dbllist_button:active {
+  background-color: #ddeef9;
 }
 .webix_invalid .webix_list {
   background: #f8e2e2;
@@ -5727,6 +5734,13 @@ body.webix_print {
 }
 .webix_view .webix_tree_close:before {
   content: "\F025";
+}
+.webix_dbllist .webix_list_item,
+.webix_dbllist .webix_list_item.webix_selected {
+  border: none;
+}
+.webix_dbllist .dbllist_button .webix_icon {
+  font-size: 14px;
 }
 .webix_menu-x .webix_submenu_icon,
 .webix_view.webix_menu .webix_submenu_icon {
