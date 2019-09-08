@@ -202,6 +202,7 @@ export default class SchemeView extends JetView {
 		this.ctxmUnit = webix.ui({
 			view: "contextmenu",
 			id: "ctxmUnit",
+			point: true,
 			data: [
 				"Delete", {
 					$template: "Separator"
