@@ -9,6 +9,12 @@ import {
 import {
 	GraphX
 } from "helpers/GraphX";
+import {
+	buCoords
+} from "helpers/buCoords";
+import {
+	buHTML
+} from "helpers/buHTML"
 
 export default class SchemeView extends JetView {
 
@@ -151,14 +157,7 @@ export default class SchemeView extends JetView {
 	}
 
 	init() {
-		this.layer = this.$$("layer");
-		this.head = this.$$("head");
-		this.area = this.$$("area");
-		this.drop = this.$$("drop");
-		this.input = this.$$("input");
-		this.module = this.$$("module");
-		this.output = this.$$("output");
-
+		// ---DATABASE SAVE
 		this.fuID = "";
 		this.LinesPack = {};
 		this.ButtonsPack = {};
@@ -177,96 +176,48 @@ export default class SchemeView extends JetView {
 			Outputs: []
 		};
 		this.ButtonCoordinates = {};
+		// ---
 
-		this.svg = this.createSVG("svg");
+		this.layer = this.$$("layer");
+		this.head = this.$$("head");
+		this.area = this.$$("area");
+		this.drop = this.$$("drop");
+		this.input = this.$$("input");
+		this.module = this.$$("module");
+		this.output = this.$$("output");
+
+		this.buCoords = new buCoords();
+		this.buHTML = new buHTML();
+
+		this.svg = this.buHTML.svg({
+			id: "svg",
+			width: "100%",
+			height: "100%"
+		});
 		this.drop.$view.appendChild(this.svg);
 		this.drop.$view.onclick = (event) => {
 			if (event.target === this.svg) this.focusOff(this.fuID);
 		}
-		window.onresize = (event) => {
-			if (!$$("resultWindow").config.hidden) this.resizeResultWindow();
-		}
-
-		webix.DragControl.addDrag(this.drop.$view, {
-			$dragDestroy: () => {
-				return false;
-			},
-
-			$dragPos: (pos, ev) => {
-				let context = webix.DragControl.getContext();
-				let control = $$(context.source[0]);
-
-				pos.x = control.config.left = pos.x + context.x_offset;
-				pos.y = control.config.top = pos.y + context.y_offset;
-				if (pos.x < 0) pos.x = control.config.left = 0;
-				if (pos.x > (this.drop.$width - control.$width)) pos.x = control.config.left = this.drop.$width - control.$width;
-				if (pos.y < 0) pos.y = control.config.top = 0;
-				if (pos.y > (this.drop.$height - control.$height)) pos.y = control.config.top = this.drop.$height - control.$height;
-				setTimeout(() => {
-					window.requestAnimationFrame(() => {
-						this.rewriteLine(control.config.id, pos);
-					});
-				}, 1000 / 330);
-			},
-
-			$dragCreate: (source, ev) => {
-				const el = webix.$$(ev);
-				if (el && el !== this.drop) {
-					let pos = webix.html.pos(ev);
-					let context = webix.DragControl.getContext();
-
-					context.source = [el.config.id];
-					context.from = this.drop;
-					context.to = this.drop;
-					context.y_offset = el.config.top - pos.y;
-					context.x_offset = el.config.left - pos.x;
-					return el.$view;
+		this.initDrag();
+		this.ctxmUnit = webix.ui({
+			view: "contextmenu",
+			id: "ctxmUnit",
+			data: [
+				"Delete", {
+					$template: "Separator"
+				},
+				"Information"
+			],
+			on: {
+				onMenuItemClick: function(id) {
+					webix.message(this.config.$currentUnit);
 				}
-				return false;
-			}
-
-		});
-
-		webix.DragControl.addDrag(this.layer.$view, {
-			$dragDestroy: (from, html) => {
-				return false;
 			},
-
-			$dragPos: (pos, ev) => {
-				let context = webix.DragControl.getContext();
-				let control = $$(context.source[0]);
-
-				pos.x = control.config.left = pos.x + context.x_offset;
-				pos.y = control.config.top = pos.y + context.y_offset;
-				if (pos.x < 0) pos.x = control.config.left = 0;
-				if (pos.y < 0) pos.y = control.config.top = 0;
-				if (pos.x > (this.drop.$width - control.$width)) pos.x = control.config.left = this.drop.$width - control.$width;
-				if (pos.y > (this.drop.$height - control.$height)) pos.y = control.config.top = this.drop.$height - control.$height;
-			},
-
-			$dragCreate: (source, ev) => {
-				const parent = webix.$$(ev);
-				if (parent && parent.config.$type && parent.config.$draggable) {
-					let unit = this.addUnit(parent);
-					let pos = webix.html.pos(ev);
-					let unitCoords = unit.$view.getBoundingClientRect();
-					let context = webix.DragControl.getContext();
-
-					context.source = [unit.config.id];
-					context.from = $$(unit.config.$parentTYPE);
-					context.to = this.drop;
-					context.y_offset = (pos.y - unitCoords.top - unitCoords.height - ev.layerY) + unitCoords.height / 2;
-					context.x_offset = (pos.x - unitCoords.left - unitCoords.width - ev.layerX) + unitCoords.width / 2;
-					return unit.$view;
-				}
-				return false;
-			}
-
+			$currentUnit: ""
 		});
-
-		webix.ui({
+		this.winResult = webix.ui({
 			view: "window",
-			id: "resultWindow",
+			id: "winResult",
 			position: "center",
 			width: 500,
 			height: 500,
@@ -284,7 +235,7 @@ export default class SchemeView extends JetView {
 						view: "icon",
 						icon: "wxi-close",
 						click: function() {
-							$$("resultWindow").hide();
+							$$("winResult").hide();
 							$$("listWays").clearAll();
 						}
 					}
@@ -322,6 +273,9 @@ export default class SchemeView extends JetView {
 				]
 			}
 		});
+		window.onresize = (event) => {
+			if (!this.winResult.config.hidden) this.resizeWin(this.winResult, 70);
+		}
 	}
 
 	focusOff() {
@@ -343,19 +297,15 @@ export default class SchemeView extends JetView {
 		this.focusOn(tuID);
 	}
 
-	angleVectors(v1, v2) {
-		return Math.acos(((v1.x * v2.x) + (v1.y * v2.y)) / (Math.sqrt((v1.x * v1.x) + (v1.y * v1.y)) * Math.sqrt((v2.x * v2.x) + (v2.y * v2.y)))) * 180 / Math.PI;
-	}
-
 	createLine(lnID, lnC) {
-		let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-		line.setAttribute("id", lnID);
-		line.setAttribute("type", "line");
-		line.setAttribute("x1", lnC.x1);
-		line.setAttribute("y1", lnC.y1);
-		line.setAttribute("x2", lnC.x2);
-		line.setAttribute("y2", lnC.y2);
-		line.setAttribute("marker-end", "url(#arrow)");
+		let line = this.buHTML.line({
+			id: lnID,
+			x1: lnC.x1,
+			y1: lnC.y1,
+			x2: lnC.x2,
+			y2: lnC.y2,
+			markerEnd: "arrow"
+		});
 
 		line.onclick = (event) => {
 			let lnID = event.target.id;
@@ -365,28 +315,17 @@ export default class SchemeView extends JetView {
 		return line;
 	}
 
-	createSVG(svgID) {
-		let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-		svg.setAttribute("id", svgID);
-		svg.setAttribute("width", "100%");
-		svg.setAttribute("height", "100%");
-		svg.setAttribute("version", "1.1");
-		svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
-		return svg;
-	}
-
-	addLine(fuID, tuID, event) {
+	addLine(fuID, tuID) {
 		if (((fuID) || (fuID.length !== 0)) && (fuID !== tuID)) {
 			let lnID, lnC;
 			let fromID, toID;
-			let fromUnit, toUnit, drop;
+			let fromUnit, toUnit;
 
 			fromID = fuID;
 			toID = tuID;
 
 			fromUnit = $$(fromID);
 			toUnit = $$(toID);
-			drop = this.drop;
 
 			this.focusOff();
 
@@ -399,7 +338,7 @@ export default class SchemeView extends JetView {
 				}
 			}
 
-			lnC = this.getLineCoords({
+			lnC = this.buCoords.getLineCoords({
 				x: fromUnit.$view.offsetLeft,
 				y: fromUnit.$view.offsetTop
 			}, {
@@ -407,8 +346,7 @@ export default class SchemeView extends JetView {
 				y: toUnit.$view.offsetTop
 			}, {
 				fromCoords: fromUnit.$view.getBoundingClientRect(),
-				toCoords: toUnit.$view.getBoundingClientRect(),
-				dropCoords: drop.$view.getBoundingClientRect()
+				toCoords: toUnit.$view.getBoundingClientRect()
 			});
 
 			lnID = this.nextLineID();
@@ -454,6 +392,8 @@ export default class SchemeView extends JetView {
 			$parentTYPE: parentType
 		});
 
+		this.ctxmUnit.attachTo($$(unitID).$view);
+
 		$$(unitID).$view.firstChild.firstChild.style.transition = "0.15s ease-in-out";
 
 		$$(unitID).$view.onmousedown = (event) => {
@@ -466,19 +406,22 @@ export default class SchemeView extends JetView {
 				(event.target.getBoundingClientRect().y === this.ButtonCoordinates.y) &&
 				(event.which == 1)
 			) {
-				this.clickButton(unitID, event);
+				this.clickUnit(unitID);
+			}
+			if (event.which == 3) {
+				this.ctxmUnit.config.$currentUnit = unitID;
 			}
 		}
 		return $$(unitID);
 	}
 
-	clickButton(tuID, event) {
+	clickUnit(tuID) {
 		let fuID = this.fuID;
 		if ((!fuID) || (fuID.length === 0)) {
 			this.focusOn(tuID);
 		} else {
 			if (fuID !== tuID) {
-				this.addLine(fuID, tuID, event);
+				this.addLine(fuID, tuID);
 			} else {
 				this.focusOff();
 			}
@@ -490,7 +433,7 @@ export default class SchemeView extends JetView {
 			let line;
 			let lnID, lnC;
 			let fromID, toID;
-			let fromUnit, toUnit, drop;
+			let fromUnit, toUnit;
 
 			this.ButtonsPack[tuID].forEach((lnID) => {
 				this.LinesPack[lnID].forEach(function(uID) {
@@ -502,10 +445,9 @@ export default class SchemeView extends JetView {
 
 				fromUnit = $$(fromID);
 				toUnit = $$(toID);
-				drop = this.drop;
 				line = document.getElementById(lnID);
 
-				lnC = this.getLineCoords({
+				lnC = this.buCoords.getLineCoords({
 					x: pos.x,
 					y: pos.y
 				}, {
@@ -513,8 +455,7 @@ export default class SchemeView extends JetView {
 					y: toUnit.$view.offsetTop
 				}, {
 					fromCoords: fromUnit.$view.getBoundingClientRect(),
-					toCoords: toUnit.$view.getBoundingClientRect(),
-					dropCoords: drop.$view.getBoundingClientRect()
+					toCoords: toUnit.$view.getBoundingClientRect()
 				});
 
 				if ((fromID in this.Graph) && (this.Graph[fromID].indexOf(toID) >= 0)) {
@@ -529,57 +470,6 @@ export default class SchemeView extends JetView {
 					line.setAttribute("y2", lnC.y1);
 				}
 			});
-		}
-	}
-
-	getLineCoords(fromOffset, toOffset, coords) {
-		let fromCoords = coords.fromCoords;
-		let toCoords = coords.toCoords;
-		let dropCoords = coords.dropCoords;
-
-		let x1, y1, x2, y2;
-
-		let v1 = {};
-		let v2 = {};
-		let angle;
-
-		v1.x = (fromCoords.left + fromCoords.width / 2) - (toCoords.left + toCoords.width / 2);
-		v1.y = (fromCoords.top + fromCoords.height / 2) - (toCoords.top + toCoords.height / 2);
-		v2.x = (0) - (toCoords.left + toCoords.width / 2);
-		v2.y = (0);
-		angle = this.angleVectors(v1, v2);
-
-		if (((angle >= 45) && (angle <= 135))) {
-			if ((fromCoords.top + fromCoords.height / 2) <= (toCoords.top + toCoords.height / 2)) {
-				x1 = fromOffset.x + fromCoords.width / 2;
-				y1 = fromOffset.y + fromCoords.height - 2;
-				x2 = toOffset.x + toCoords.width / 2;
-				y2 = toOffset.y + 2;
-			} else {
-				x1 = fromOffset.x + fromCoords.width / 2;
-				y1 = fromOffset.y + 2;
-				x2 = toOffset.x + toCoords.width / 2;
-				y2 = toOffset.y + toCoords.height - 2;
-			}
-		} else {
-			if ((fromCoords.left + fromCoords.width / 2) <= (toCoords.left + toCoords.width / 2)) {
-				x1 = fromOffset.x + fromCoords.width - 2;
-				y1 = fromOffset.y + fromCoords.height / 2;
-				x2 = toOffset.x + 2;
-				y2 = toOffset.y + toCoords.height / 2;
-			} else {
-				x1 = fromOffset.x + 2;
-				y1 = fromOffset.y + fromCoords.height / 2;
-				x2 = toOffset.x + toCoords.width - 2;
-				y2 = toOffset.y + toCoords.height / 2;
-			}
-		}
-
-		return {
-			x1: x1,
-			y1: y1,
-			x2: x2,
-			y2: y2
 		}
 	}
 
@@ -616,7 +506,6 @@ export default class SchemeView extends JetView {
 				}
 			});
 		}
-
 		this.LinesPack[lnID].forEach((value, index, array) => {
 			if (this.Graph.hasOwnProperty(value))
 				this.Graph[value].forEach((v, i) => {
@@ -626,7 +515,6 @@ export default class SchemeView extends JetView {
 						if (v === array[index - 1]) this.Graph[value].splice(i, 1);
 					if (this.Graph[value].length === 0) delete this.Graph[value];
 				});
-
 			if (this.GraphReverse.hasOwnProperty(value))
 				this.GraphReverse[value].forEach((v, i) => {
 					if (index === 0)
@@ -664,7 +552,7 @@ export default class SchemeView extends JetView {
 	nextLineID() {
 		if (this.Queues.Lines.length !== 0) return this.Queues.Lines.shift();
 		this.Counts.Lines++;
-		return "line" + this.Counts.Lines;
+		return "line_" + this.Counts.Lines;
 	}
 
 	getResult() {
@@ -682,7 +570,7 @@ export default class SchemeView extends JetView {
 
 		result.forEach(function(value, index) {
 			value.forEach(function(v, i) {
-				result[index][i] = $$(v).config.$parentID || v;
+				result[index][i] = $$($$(v).config.$parentID).config.label || v;
 			});
 		});
 
@@ -702,17 +590,94 @@ export default class SchemeView extends JetView {
 
 		$$("listWays").sort("#num#", "asc", "int");
 
-		this.resizeResultWindow();
-		$$("resultWindow").show();
+		this.resizeWin(this.winResult, 70);
+		this.winResult.show();
 	}
 
-	resizeResultWindow() {
-		$$("resultWindow").define({
-			width: window.innerWidth / 100 * 70,
-			height: window.innerHeight / 100 * 70,
-			minWidth: window.innerWidth / 100 * 70,
-			minHeight: window.innerHeight / 100 * 70,
+	resizeWin(win, per) {
+		win.define({
+			width: window.innerWidth / 100 * per,
+			height: window.innerHeight / 100 * per,
+			minWidth: window.innerWidth / 100 * per,
+			minHeight: window.innerHeight / 100 * per,
 		});
-		$$("resultWindow").resize();
+		win.resize();
+	}
+
+	initDrag() {
+		webix.DragControl.addDrag(this.drop.$view, {
+			$dragDestroy: () => {
+				return false;
+			},
+
+			$dragPos: (pos, ev) => {
+				let context = webix.DragControl.getContext();
+				let control = $$(context.source[0]);
+
+				pos.x = control.config.left = pos.x + context.x_offset;
+				pos.y = control.config.top = pos.y + context.y_offset;
+				if (pos.x < 0) pos.x = control.config.left = 0;
+				if (pos.x > (this.drop.$width - control.$width)) pos.x = control.config.left = this.drop.$width - control.$width;
+				if (pos.y < 0) pos.y = control.config.top = 0;
+				if (pos.y > (this.drop.$height - control.$height)) pos.y = control.config.top = this.drop.$height - control.$height;
+				setTimeout(() => {
+					window.requestAnimationFrame(() => {
+						this.rewriteLine(control.config.id, pos);
+					});
+				}, 1000 / 400);
+			},
+
+			$dragCreate: (source, ev) => {
+				const el = webix.$$(ev);
+				if (el && el !== this.drop) {
+					let pos = webix.html.pos(ev);
+					let context = webix.DragControl.getContext();
+
+					context.source = [el.config.id];
+					context.from = this.drop;
+					context.to = this.drop;
+					context.y_offset = el.config.top - pos.y;
+					context.x_offset = el.config.left - pos.x;
+					return el.$view;
+				}
+				return false;
+			}
+		});
+
+		webix.DragControl.addDrag(this.layer.$view, {
+			$dragDestroy: (from, html) => {
+				return false;
+			},
+
+			$dragPos: (pos, ev) => {
+				let context = webix.DragControl.getContext();
+				let control = $$(context.source[0]);
+
+				pos.x = control.config.left = pos.x + context.x_offset;
+				pos.y = control.config.top = pos.y + context.y_offset;
+				if (pos.x < 0) pos.x = control.config.left = 0;
+				if (pos.y < 0) pos.y = control.config.top = 0;
+				if (pos.x > (this.drop.$width - control.$width)) pos.x = control.config.left = this.drop.$width - control.$width;
+				if (pos.y > (this.drop.$height - control.$height)) pos.y = control.config.top = this.drop.$height - control.$height;
+			},
+
+			$dragCreate: (source, ev) => {
+				const parent = webix.$$(ev);
+				if (parent && parent.config.$type && parent.config.$draggable) {
+					let unit = this.addUnit(parent);
+					let pos = webix.html.pos(ev);
+					let unitCoords = unit.$view.getBoundingClientRect();
+					let context = webix.DragControl.getContext();
+
+					context.source = [unit.config.id];
+					context.from = $$(unit.config.$parentTYPE);
+					context.to = this.drop;
+					context.y_offset = (pos.y - unitCoords.top - unitCoords.height - ev.layerY) + unitCoords.height / 2;
+					context.x_offset = (pos.x - unitCoords.left - unitCoords.width - ev.layerX) + unitCoords.width / 2;
+					return unit.$view;
+				}
+				return false;
+			}
+		});
 	}
 }
