@@ -14,7 +14,10 @@ import {
 } from "helpers/buCoords";
 import {
 	buHTML
-} from "helpers/buHTML"
+} from "helpers/buHTML";
+import {
+	mngID
+} from "helpers/mngID";
 
 export default class SchemeView extends JetView {
 
@@ -156,15 +159,16 @@ export default class SchemeView extends JetView {
 	}
 
 	init() {
-		this.QueuesOptions = {
-			input: "d_input_",
-			module: "d_module_",
-			output: "d_output_",
-			line : "line_"
+		const OptionsID = {
+			"input": "d_input_",
+			"module": "d_module_",
+			"output": "d_output_",
+			"line": "line_"
 		};
 
 		this.buCoords = new buCoords();
 		this.buHTML = new buHTML();
+		this.mngID = new mngID(OptionsID);
 
 		// ---DATABASE SAVE
 		this.fuID = "";
@@ -172,18 +176,6 @@ export default class SchemeView extends JetView {
 		this.ButtonsPack = {};
 		this.Graph = {};
 		this.GraphReverse = {};
-		this.Counts = {
-			Lines: 0,
-			Inputs: 0,
-			Modules: 0,
-			Outputs: 0
-		};
-		this.Queues = {
-			Lines: [],
-			Inputs: [],
-			Modules: [],
-			Outputs: []
-		};
 		this.ButtonCoordinates = {};
 		// ---
 
@@ -216,7 +208,7 @@ export default class SchemeView extends JetView {
 			],
 			on: {
 				onMenuItemClick: function(id) {
-					this.config.$currentUnit
+					let current = this.config.$currentUnit;
 				}
 			},
 			$currentUnit: ""
@@ -225,8 +217,6 @@ export default class SchemeView extends JetView {
 			view: "window",
 			id: "winResult",
 			position: "center",
-			width: 500,
-			height: 500,
 			modal: true,
 			close: true,
 			head: {
@@ -295,6 +285,7 @@ export default class SchemeView extends JetView {
 		if ((tuID) || (tuID.length !== 0)) {
 			webix.html.addCss($$(tuID).getNode(), "webix_danger");
 			this.fuID = tuID;
+			console.log(this.mngID.Using);
 		}
 	}
 
@@ -355,7 +346,7 @@ export default class SchemeView extends JetView {
 				toCoords: toUnit.$view.getBoundingClientRect()
 			});
 
-			lnID = this.nextLineID();
+			lnID = this.mngID.get("line")
 
 			this.svg.appendChild(this.createLine(lnID, {
 				x1: lnC.x1,
@@ -372,7 +363,7 @@ export default class SchemeView extends JetView {
 		let parentCoords = parent.$view.getBoundingClientRect();
 		let parentType = parent.config.$type;
 		let unitType = "d_" + parentType;
-		let unitID = this.nextUnitID(parentType);
+		let unitID = this.mngID.get(parentType);
 
 		if (parentType !== "module") {
 			width = 70;
@@ -512,7 +503,7 @@ export default class SchemeView extends JetView {
 	}
 
 	removeConnectionsByLine(lnID) {
-		this.Queues.Lines.push(lnID);
+		this.mngID.throw(lnID);
 		for (let key in this.ButtonsPack) {
 			this.ButtonsPack[key].forEach((value, index) => {
 				if (lnID === value) {
@@ -543,23 +534,7 @@ export default class SchemeView extends JetView {
 	}
 
 	removeConnectionsByUnit(unitID) {
-		let href = this.getQueuesOptions($$(unitID).config.$parentTYPE).href;
-		this.Queues[href].push(unitID);
-	}
-
-	nextUnitID(type) {
-		let QueuesOptions = this.getQueuesOptions(type);
-		let prefix = QueuesOptions.prefix;
-		let href = QueuesOptions.href;
-		if (this.Queues[href].length !== 0) return this.Queues[href].shift();
-		this.Counts[href]++;
-		return prefix + this.Counts[href];
-	}
-
-	nextLineID() {
-		if (this.Queues.Lines.length !== 0) return this.Queues.Lines.shift();
-		this.Counts.Lines++;
-		return "line_" + this.Counts.Lines;
+		this.mngID.throw(unitID);
 	}
 
 	getResult() {
