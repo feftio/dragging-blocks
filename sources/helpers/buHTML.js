@@ -23,7 +23,6 @@ buHTML.prototype.line = function(options) {
 	let markerEnd = options.markerEnd || "";
 	let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
 	line.setAttribute("id", id);
-	line.setAttribute("type", "line");
 	line.setAttribute("x1", x1);
 	line.setAttribute("y1", y1);
 	line.setAttribute("x2", x2);

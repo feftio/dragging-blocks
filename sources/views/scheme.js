@@ -79,7 +79,6 @@ export default class SchemeView extends JetView {
 					body: {
 						cols: [{
 							view: "button",
-							id: "unitDelete",
 							label: "..."
 						}, {
 							view: "button",
@@ -157,6 +156,16 @@ export default class SchemeView extends JetView {
 	}
 
 	init() {
+		this.QueuesOptions = {
+			input: "d_input_",
+			module: "d_module_",
+			output: "d_output_",
+			line : "line_"
+		};
+
+		this.buCoords = new buCoords();
+		this.buHTML = new buHTML();
+
 		// ---DATABASE SAVE
 		this.fuID = "";
 		this.LinesPack = {};
@@ -186,9 +195,6 @@ export default class SchemeView extends JetView {
 		this.module = this.$$("module");
 		this.output = this.$$("output");
 
-		this.buCoords = new buCoords();
-		this.buHTML = new buHTML();
-
 		this.svg = this.buHTML.svg({
 			id: "svg",
 			width: "100%",
@@ -202,7 +208,6 @@ export default class SchemeView extends JetView {
 		this.ctxmUnit = webix.ui({
 			view: "contextmenu",
 			id: "ctxmUnit",
-			point: true,
 			data: [
 				"Delete", {
 					$template: "Separator"
@@ -211,7 +216,7 @@ export default class SchemeView extends JetView {
 			],
 			on: {
 				onMenuItemClick: function(id) {
-					webix.message(this.config.$currentUnit);
+					this.config.$currentUnit
 				}
 			},
 			$currentUnit: ""
@@ -416,6 +421,14 @@ export default class SchemeView extends JetView {
 		return $$(unitID);
 	}
 
+	removeLine(lnID) {
+		this.removeConnectionsByLine(lnID);
+	}
+
+	removeUnit() {
+
+	}
+
 	clickUnit(tuID) {
 		let fuID = this.fuID;
 		if ((!fuID) || (fuID.length === 0)) {
@@ -529,22 +542,15 @@ export default class SchemeView extends JetView {
 		if (this.LinesPack.hasOwnProperty(lnID)) delete this.LinesPack[lnID];
 	}
 
+	removeConnectionsByUnit(unitID) {
+		let href = this.getQueuesOptions($$(unitID).config.$parentTYPE).href;
+		this.Queues[href].push(unitID);
+	}
+
 	nextUnitID(type) {
-		let prefix, href;
-		switch (type) {
-			case "input":
-				prefix = "d_input_";
-				href = "Inputs";
-				break;
-			case "module":
-				prefix = "d_module_";
-				href = "Modules";
-				break;
-			case "output":
-				prefix = "d_output_";
-				href = "Outputs";
-				break;
-		}
+		let QueuesOptions = this.getQueuesOptions(type);
+		let prefix = QueuesOptions.prefix;
+		let href = QueuesOptions.href;
 		if (this.Queues[href].length !== 0) return this.Queues[href].shift();
 		this.Counts[href]++;
 		return prefix + this.Counts[href];
