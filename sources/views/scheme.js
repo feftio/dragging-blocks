@@ -89,14 +89,17 @@ export default class SchemeView extends JetView {
 							value: "Result",
 							width: 100,
 							click: () => {
-								this.renderResultWindow(this.getResult());
+								this.renderWinResult(this.getResult());
 							}
 						}, {
 							view: "button",
 							id: "saveButton",
 							value: "Save",
 							width: 100,
-							badge: 0
+							badge: 0,
+							click: () => {
+
+							}
 						}]
 					}
 
@@ -207,8 +210,10 @@ export default class SchemeView extends JetView {
 				"Information"
 			],
 			on: {
-				onMenuItemClick: function(id) {
-					let current = this.config.$currentUnit;
+				onMenuItemClick: (id) => {
+					let unitID = $$("ctxmUnit").config.$currentUnit;
+					if (id === "Delete") this.removeUnit(unitID);
+					//if (id === "Information") this.renderInfoWindow;
 				}
 			},
 			$currentUnit: ""
@@ -285,7 +290,6 @@ export default class SchemeView extends JetView {
 		if ((tuID) || (tuID.length !== 0)) {
 			webix.html.addCss($$(tuID).getNode(), "webix_danger");
 			this.fuID = tuID;
-			console.log(this.mngID.Using);
 		}
 	}
 
@@ -305,9 +309,7 @@ export default class SchemeView extends JetView {
 		});
 
 		line.onclick = (event) => {
-			let lnID = event.target.id;
-			if (lnID) event.target.remove();
-			this.removeConnectionsByLine(lnID);
+			this.removeLine(event.target.id);
 		}
 		return line;
 	}
@@ -413,11 +415,20 @@ export default class SchemeView extends JetView {
 	}
 
 	removeLine(lnID) {
+		document.getElementById(lnID).remove();
+		this.mngID.throw(lnID);
 		this.removeConnectionsByLine(lnID);
 	}
 
-	removeUnit() {
-
+	removeUnit(unitID) {
+		if (this.ButtonsPack.hasOwnProperty(unitID)) {
+			JSON.parse(JSON.stringify(this.ButtonsPack))[unitID].forEach((value) => {
+				this.removeLine(value);
+			});
+		}
+		this.drop.removeView(unitID);
+		this.mngID.throw(unitID);
+		this.removeConnectionsByUnit(unitID);
 	}
 
 	clickUnit(tuID) {
@@ -503,38 +514,37 @@ export default class SchemeView extends JetView {
 	}
 
 	removeConnectionsByLine(lnID) {
-		this.mngID.throw(lnID);
 		for (let key in this.ButtonsPack) {
 			this.ButtonsPack[key].forEach((value, index) => {
-				if (lnID === value) {
-					this.ButtonsPack[key].splice(index, 1);
-				}
+				if (lnID === value) this.ButtonsPack[key].splice(index, 1);
 			});
+			if (this.ButtonsPack[key].length === 0) delete this.ButtonsPack[key];
 		}
 		this.LinesPack[lnID].forEach((value, index, array) => {
-			if (this.Graph.hasOwnProperty(value))
+			if (this.Graph.hasOwnProperty(value)) {
 				this.Graph[value].forEach((v, i) => {
 					if (index === 0)
 						if (v === array[index + 1]) this.Graph[value].splice(i, 1);
 					if (index === 1)
 						if (v === array[index - 1]) this.Graph[value].splice(i, 1);
-					if (this.Graph[value].length === 0) delete this.Graph[value];
 				});
-			if (this.GraphReverse.hasOwnProperty(value))
+				if (this.Graph[value].length === 0) delete this.Graph[value];
+			}
+			if (this.GraphReverse.hasOwnProperty(value)) {
 				this.GraphReverse[value].forEach((v, i) => {
 					if (index === 0)
 						if (v === array[index + 1]) this.GraphReverse[value].splice(i, 1);
 					if (index === 1)
 						if (v === array[index - 1]) this.GraphReverse[value].splice(i, 1);
-					if (this.GraphReverse[value].length === 0) delete this.GraphReverse[value];
 				});
+				if (this.GraphReverse[value].length === 0) delete this.GraphReverse[value];
+			}
 		});
-
 		if (this.LinesPack.hasOwnProperty(lnID)) delete this.LinesPack[lnID];
 	}
 
 	removeConnectionsByUnit(unitID) {
-		this.mngID.throw(unitID);
+		if (this.ButtonsPack.hasOwnProperty(unitID)) delete this.ButtonsPack[unitID];
 	}
 
 	getResult() {
@@ -559,7 +569,7 @@ export default class SchemeView extends JetView {
 		return result;
 	}
 
-	renderResultWindow(result) {
+	renderWinResult(result) {
 		result.forEach(function(value, index) {
 			let CountWays = index + 1;
 			$$("listWays").add({

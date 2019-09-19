@@ -1,9 +1,9 @@
 export const inputs_db = [
-{ id:"input_1", $type:"input", label:"1(IN)", $description:"" },
-{ id:"input_2", $type:"input", label:"2(IN)", $description:"" },
-{ id:"input_3", $type:"input", label:"3(IN)", $description:"" },
-{ id:"input_4", $type:"input", label:"4(IN)", $description:"" },
-{ id:"input_5", $type:"input", label:"5(IN)", $description:"" },
+{ id:"input_1", $type:"input", label:"1in", $description:"" },
+{ id:"input_2", $type:"input", label:"2in", $description:"" },
+{ id:"input_3", $type:"input", label:"3in", $description:"" },
+{ id:"input_4", $type:"input", label:"4in", $description:"" },
+{ id:"input_5", $type:"input", label:"5in", $description:"" },
 ];
 
 export const modules_db = [
@@ -20,9 +20,9 @@ export const modules_db = [
 ];
 
 export const outputs_db = [
-{ id:"output_1", $type:"output", label:"1(OUT)", $description:"" },
-{ id:"output_2", $type:"output", label:"2(OUT)", $description:"" },
-{ id:"output_3", $type:"output", label:"3(OUT)", $description:"" },
-{ id:"output_4", $type:"output", label:"4(OUT)", $description:"" },
-{ id:"output_5", $type:"output", label:"5(OUT)", $description:"" }
+{ id:"output_1", $type:"output", label:"1out", $description:"" },
+{ id:"output_2", $type:"output", label:"2out", $description:"" },
+{ id:"output_3", $type:"output", label:"3out", $description:"" },
+{ id:"output_4", $type:"output", label:"4out", $description:"" },
+{ id:"output_5", $type:"output", label:"5out", $description:"" }
 ];
