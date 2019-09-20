@@ -20,6 +20,7 @@ buHTML.prototype.line = function(options) {
 	let y1 = options.y1 || 0;
 	let x2 = options.x2 || 0;
 	let y2 = options.y2 || 0;
+	let markerStart = options.markerStart || "";
 	let markerEnd = options.markerEnd || "";
 	let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
 	line.setAttribute("id", id);
@@ -27,6 +28,7 @@ buHTML.prototype.line = function(options) {
 	line.setAttribute("y1", y1);
 	line.setAttribute("x2", x2);
 	line.setAttribute("y2", y2);
+	if (markerStart !== "") line.setAttribute("marker-start", `url(#${markerStart})`);
 	if (markerEnd !== "") line.setAttribute("marker-end", `url(#${markerEnd})`);
 	return line;
 }

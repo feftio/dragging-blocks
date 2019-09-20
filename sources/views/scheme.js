@@ -129,7 +129,7 @@ export default class SchemeView extends JetView {
 								cells: [{
 									view: "template",
 									id: "drop_hidden",
-									template: '<svg><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth" viewBox="0 0 17 17"><path d="M0,0 L0,6 L9,3 z" fill="#1CA1C1" /></marker></defs></svg>'
+									template: '<svg><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth" viewBox="0 0 17 17"><path d="M0,0 L0,6 L9,3 z" fill="#1CA1C1"/></marker><marker id="circle" viewBox="0 0 23 23" refX="5" refY="5"markerWidth="5" markerHeight="5"><circle cx="5" cy="5" r="5" fill="#1CA1C1"/></marker></defs></svg>'
 								}]
 							},
 
@@ -305,6 +305,7 @@ export default class SchemeView extends JetView {
 			y1: lnC.y1,
 			x2: lnC.x2,
 			y2: lnC.y2,
+			markerStart: "circle",
 			markerEnd: "arrow"
 		});
 
@@ -616,7 +617,7 @@ export default class SchemeView extends JetView {
 					window.requestAnimationFrame(() => {
 						this.rewriteLine(control.config.id, pos);
 					});
-				}, 1000 / 400);
+				}, 1000 / 500);
 			},
 
 			$dragCreate: (source, ev) => {
