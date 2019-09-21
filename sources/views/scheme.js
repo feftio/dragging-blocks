@@ -98,7 +98,7 @@ export default class SchemeView extends JetView {
 							width: 100,
 							badge: 0,
 							click: () => {
-
+								console.log(JSON.stringify(this.GraphReverse));
 							}
 						}]
 					}
@@ -229,7 +229,7 @@ export default class SchemeView extends JetView {
 				elements: [
 
 					{
-						template: '<span style="font-size:20px;">Result</span>'
+						template: '<span style="font-size: 20px;">Result</span>'
 					},
 
 					{
@@ -247,7 +247,7 @@ export default class SchemeView extends JetView {
 				rows: [{
 						view: "list",
 						id: "listWays",
-						template: "#title#",
+						template: '<span style="font-size: 13px;">#title#</span>',
 						data: [
 
 						],
@@ -427,6 +427,7 @@ export default class SchemeView extends JetView {
 				this.removeLine(value);
 			});
 		}
+		this.focusOff();
 		this.drop.removeView(unitID);
 		this.mngID.throw(unitID);
 		this.removeConnectionsByUnit(unitID);
