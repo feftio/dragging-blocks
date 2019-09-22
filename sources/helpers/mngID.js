@@ -20,7 +20,7 @@ mngID.prototype.dump = function(config) {
 mngID.prototype.get = function(type) {
 	let id;
 	if (this.Queues[type].length !== 0) {
-		id = this.Queues[type].shift();
+		id = this.Queues[type].sort().shift();
 	} else {
 		this.Current[type]++;
 		id = this.OptionsID[type] + this.Current[type];

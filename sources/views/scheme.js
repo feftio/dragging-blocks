@@ -213,11 +213,12 @@ export default class SchemeView extends JetView {
 				onMenuItemClick: (id) => {
 					let unitID = $$("ctxmUnit").config.$currentUnit;
 					if (id === "Delete") this.removeUnit(unitID);
-					//if (id === "Information") this.renderInfoWindow;
+					//if (id === "Information") this.renderWinInfo;
 				}
 			},
 			$currentUnit: ""
 		});
+		this.winShow
 		this.winResult = webix.ui({
 			view: "window",
 			id: "winResult",
@@ -298,23 +299,6 @@ export default class SchemeView extends JetView {
 		this.focusOn(tuID);
 	}
 
-	createLine(lnID, lnC) {
-		let line = this.buHTML.line({
-			id: lnID,
-			x1: lnC.x1,
-			y1: lnC.y1,
-			x2: lnC.x2,
-			y2: lnC.y2,
-			markerStart: "circle",
-			markerEnd: "arrow"
-		});
-
-		line.onclick = (event) => {
-			this.removeLine(event.target.id);
-		}
-		return line;
-	}
-
 	addLine(fuID, tuID) {
 		if (((fuID) || (fuID.length !== 0)) && (fuID !== tuID)) {
 			let lnID, lnC;
@@ -351,11 +335,17 @@ export default class SchemeView extends JetView {
 
 			lnID = this.mngID.get("line")
 
-			this.svg.appendChild(this.createLine(lnID, {
+			this.svg.appendChild(this.buHTML.line({
+				id: lnID,
 				x1: lnC.x1,
 				y1: lnC.y1,
 				x2: lnC.x2,
-				y2: lnC.y2
+				y2: lnC.y2,
+				markerStart: "circle",
+				markerEnd: "arrow",
+				onclick: (event) => {
+					this.removeLine(event.target.id);
+				}
 			}));
 			this.addConnections(fromID, lnID, toID);
 		}
@@ -374,7 +364,7 @@ export default class SchemeView extends JetView {
 			css = "webix_primary";
 		} else {
 			width = 100;
-			height = 50;
+			height = 70;
 			css = "webix_primary";
 		}
 
@@ -394,7 +384,10 @@ export default class SchemeView extends JetView {
 
 		this.ctxmUnit.attachTo($$(unitID).$view);
 
-		$$(unitID).$view.firstChild.firstChild.style.transition = "0.15s ease-in-out";
+		$$(unitID).$view.firstChild.firstChild.style.transition = "background-color 0.15s ease-in-out";
+		$$(unitID).$view.firstChild.firstChild.style.borderRadius = "100%";
+		$$(unitID).$view.firstChild.style.borderRadius = "100%";
+		$$(unitID).$view.style.borderRadius = "100%";
 
 		$$(unitID).$view.onmousedown = (event) => {
 			if (event.which == 1) this.ButtonCoordinates = event.target.getBoundingClientRect();
