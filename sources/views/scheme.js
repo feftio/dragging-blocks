@@ -199,6 +199,7 @@ export default class SchemeView extends JetView {
 		this.drop.$view.onclick = (event) => {
 			if (event.target === this.svg) this.focusOff(this.fuID);
 		}
+
 		this.initDrag();
 		this.initUI();
 
@@ -210,6 +211,29 @@ export default class SchemeView extends JetView {
 	}
 
 	initUI() {
+		webix.protoUI({
+			name: "windowA",
+			$init: function() {
+				this.$ready.push(function() {
+					this.attachEvent("onShow", function() {
+						this.$view.classList.remove("animated", "rollOut");
+						this.$view.classList.add("animated", "zoomIn");
+					})
+					this.attachEvent("onHide", function() {
+						this.$view.style.display = "block";
+						this.$view.classList.remove("animated", "zoomIn");
+						this.$view.classList.add("animated", "rollOut");
+
+						this.$view.addEventListener("animationend", () => {
+							if (this.$view.classList.contains("rollOut")) {
+								this.$view.style.display = "none";
+							}
+						});
+					})
+				});
+			}
+		}, webix.ui.window);
+
 		this.ctxmUnit = webix.ui({
 			view: "contextmenu",
 			id: "ctxmUnit",
@@ -232,7 +256,7 @@ export default class SchemeView extends JetView {
 		this.ctxmUnit.$view.classList.add("no-select");
 
 		this.winInfo = webix.ui({
-			view: "window",
+			view: "windowA",
 			id: "winInfo",
 			position: "center",
 			modal: true,
@@ -242,7 +266,7 @@ export default class SchemeView extends JetView {
 				elements: [
 
 					{
-						template: '<div style="text-align: center; padding-top: 4px;"><span style="font-size: 20px; text-align: center;">Information</span></div>'
+						template: '<div style="text-align: left; padding-top: 4px;"><span style="font-size: 20px;">Information</span></div>'
 					},
 
 					{
@@ -278,7 +302,7 @@ export default class SchemeView extends JetView {
 		});
 
 		this.winResult = webix.ui({
-			view: "window",
+			view: "windowA",
 			id: "winResult",
 			position: "center",
 			modal: true,
@@ -288,7 +312,7 @@ export default class SchemeView extends JetView {
 				elements: [
 
 					{
-						template: '<div style="text-align: center; padding-top: 4px;"><span style="font-size: 20px; text-align: center;">Result</span></div>'
+						template: '<div style="text-align: left; padding-top: 4px;"><span style="font-size: 20px;">Result</span></div>'
 					},
 
 					{
@@ -464,9 +488,13 @@ export default class SchemeView extends JetView {
 	}
 
 	removeLine(lnID) {
-		document.getElementById(lnID).remove();
 		this.mngID.throw(lnID);
 		this.removeConnectionsByLine(lnID);
+		document.getElementById(lnID).classList.add("animated", "fadeOutDown");
+		document.getElementById(lnID).addEventListener("animationend", () => {
+			document.getElementById(lnID).remove();
+		});
+
 	}
 
 	removeUnit(unitID) {
@@ -476,9 +504,12 @@ export default class SchemeView extends JetView {
 			});
 		}
 		this.focusOff();
-		this.drop.removeView(unitID);
-		this.mngID.throw(unitID);
-		this.removeConnectionsByUnit(unitID);
+		$$(unitID).$view.classList.add("animated", "rollOut");
+		$$(unitID).$view.addEventListener("animationend", () => {
+			this.mngID.throw(unitID);
+			this.removeConnectionsByUnit(unitID);
+			this.drop.removeView(unitID);
+		});
 	}
 
 	clickUnit(tuID) {
