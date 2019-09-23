@@ -15,7 +15,7 @@ buCoords.prototype.getLineCoords = function(fromOffset, toOffset, Coords) {
 	v2.y = (0);
 	angle = this.angleVectors(v1, v2);
 
-	if (((angle >= 45) && (angle <= 135))) {
+	if (((angle >= 75) && (angle <= 105))) {
 		if ((fromCoords.top + fromCoords.height / 2) <= (toCoords.top + toCoords.height / 2)) {
 			x1 = fromOffset.x + fromCoords.width / 2;
 			y1 = fromOffset.y + fromCoords.height - 2;

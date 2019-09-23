@@ -7,7 +7,7 @@ export const inputs_db = [
 ];
 
 export const modules_db = [
-{ id:"module_1",  $type:"module",  label:"BlackFilter",  $description:"" },
+{ id:"module_1",  $type:"module",  label:"BlackFilter",  $description:"123123asdasdasfasfasd asd asd asd asasdasd ad asdad asdas dasd asd asd adasd asd asda asd asd asd asd asd asf sdfgsdgasdasf sdg asd asfasd gdfg sdfsdf sdgsd gsd gsdg sdg sdg sdgsdg sdg sdg sdg sdafdsgsdfasdas asd asda123" },
 { id:"module_2",  $type:"module",  label:"YellowFilter", $description:"" },
 { id:"module_3",  $type:"module",  label:"WhiteFilter",  $description:"" },
 { id:"module_4",  $type:"module",  label:"GreenFilter",  $description:"" },

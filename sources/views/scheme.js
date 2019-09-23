@@ -172,11 +172,11 @@ export default class SchemeView extends JetView {
 		this.buCoords = new buCoords();
 		this.buHTML = new buHTML();
 		this.mngID = new mngID(OptionsID);
+		this.fuID = "";
 
 		// ---DATABASE SAVE
-		this.fuID = "";
 		this.LinesPack = {};
-		this.ButtonsPack = {};
+		this.UnitsPack = {};
 		this.Graph = {};
 		this.GraphReverse = {};
 		this.ButtonCoordinates = {};
@@ -200,6 +200,16 @@ export default class SchemeView extends JetView {
 			if (event.target === this.svg) this.focusOff(this.fuID);
 		}
 		this.initDrag();
+		this.initUI();
+
+		window.onresize = (event) => {
+			if (!this.winResult.config.hidden) this.resizeWin(this.winResult, 70);
+			if (!this.winInfo.config.hidden) this.resizeWin(this.winInfo, 50);
+		}
+
+	}
+
+	initUI() {
 		this.ctxmUnit = webix.ui({
 			view: "contextmenu",
 			id: "ctxmUnit",
@@ -213,12 +223,60 @@ export default class SchemeView extends JetView {
 				onMenuItemClick: (id) => {
 					let unitID = $$("ctxmUnit").config.$currentUnit;
 					if (id === "Delete") this.removeUnit(unitID);
-					//if (id === "Information") this.renderWinInfo;
+					if (id === "Information") this.renderWinInfo(unitID);
 				}
 			},
 			$currentUnit: ""
 		});
-		this.winShow
+
+		this.ctxmUnit.$view.classList.add("no-select");
+
+		this.winInfo = webix.ui({
+			view: "window",
+			id: "winInfo",
+			position: "center",
+			modal: true,
+			close: true,
+			head: {
+				view: "toolbar",
+				elements: [
+
+					{
+						template: '<div style="text-align: center; padding-top: 4px;"><span style="font-size: 20px; text-align: center;">Information</span></div>'
+					},
+
+					{
+						view: "icon",
+						icon: "wxi-close",
+						click: function() {
+							$$("winInfo").hide();
+						}
+					}
+
+				],
+			},
+			body: {
+				rows: [{
+					view: "scrollview",
+					id: "svInfo",
+					scroll: "y",
+					body: {
+						rows: [{
+							view: "label",
+							id: "labelInfo",
+							align: "center",
+							label: "",
+						}, {
+							view: "template",
+							id: "textInfo",
+							autoheight: true,
+							template: ""
+						}]
+					}
+				}]
+			}
+		});
+
 		this.winResult = webix.ui({
 			view: "window",
 			id: "winResult",
@@ -230,7 +288,7 @@ export default class SchemeView extends JetView {
 				elements: [
 
 					{
-						template: '<span style="font-size: 20px;">Result</span>'
+						template: '<div style="text-align: center; padding-top: 4px;"><span style="font-size: 20px; text-align: center;">Result</span></div>'
 					},
 
 					{
@@ -275,9 +333,6 @@ export default class SchemeView extends JetView {
 				]
 			}
 		});
-		window.onresize = (event) => {
-			if (!this.winResult.config.hidden) this.resizeWin(this.winResult, 70);
-		}
 	}
 
 	focusOff() {
@@ -333,7 +388,7 @@ export default class SchemeView extends JetView {
 				toCoords: toUnit.$view.getBoundingClientRect()
 			});
 
-			lnID = this.mngID.get("line")
+			lnID = this.mngID.get("line");
 
 			this.svg.appendChild(this.buHTML.line({
 				id: lnID,
@@ -359,12 +414,12 @@ export default class SchemeView extends JetView {
 		let unitID = this.mngID.get(parentType);
 
 		if (parentType !== "module") {
-			width = 70;
+			width = 50;
 			height = 50;
 			css = "webix_primary";
 		} else {
-			width = 100;
-			height = 70;
+			width = 80;
+			height = 80;
 			css = "webix_primary";
 		}
 
@@ -372,7 +427,7 @@ export default class SchemeView extends JetView {
 			view: "button",
 			id: unitID,
 			$type: unitType,
-			label: parent.config.label,
+			label: '<span style="font-size: 13px">' + parent.config.label + '</span>',
 			top: parentCoords.top,
 			left: parentCoords.left,
 			width: width,
@@ -415,8 +470,8 @@ export default class SchemeView extends JetView {
 	}
 
 	removeUnit(unitID) {
-		if (this.ButtonsPack.hasOwnProperty(unitID)) {
-			JSON.parse(JSON.stringify(this.ButtonsPack))[unitID].forEach((value) => {
+		if (this.UnitsPack.hasOwnProperty(unitID)) {
+			JSON.parse(JSON.stringify(this.UnitsPack))[unitID].forEach((value) => {
 				this.removeLine(value);
 			});
 		}
@@ -440,13 +495,13 @@ export default class SchemeView extends JetView {
 	}
 
 	rewriteLine(tuID, pos) {
-		if (this.ButtonsPack.hasOwnProperty(tuID)) {
+		if (this.UnitsPack.hasOwnProperty(tuID)) {
 			let line;
 			let lnID, lnC;
 			let fromID, toID;
 			let fromUnit, toUnit;
 
-			this.ButtonsPack[tuID].forEach((lnID) => {
+			this.UnitsPack[tuID].forEach((lnID) => {
 				this.LinesPack[lnID].forEach(function(uID) {
 					if (uID !== tuID) {
 						fromID = tuID;
@@ -487,15 +542,15 @@ export default class SchemeView extends JetView {
 	addConnections(fromID, lnID, toID) {
 		this.LinesPack[lnID] = [fromID, toID];
 
-		if (this.ButtonsPack.hasOwnProperty(fromID))
-			this.ButtonsPack[fromID].push(lnID);
+		if (this.UnitsPack.hasOwnProperty(fromID))
+			this.UnitsPack[fromID].push(lnID);
 		else
-			this.ButtonsPack[fromID] = [lnID];
+			this.UnitsPack[fromID] = [lnID];
 
-		if (this.ButtonsPack.hasOwnProperty(toID))
-			this.ButtonsPack[toID].push(lnID);
+		if (this.UnitsPack.hasOwnProperty(toID))
+			this.UnitsPack[toID].push(lnID);
 		else
-			this.ButtonsPack[toID] = [lnID];
+			this.UnitsPack[toID] = [lnID];
 
 		if (this.Graph.hasOwnProperty(fromID))
 			this.Graph[fromID].push(toID);
@@ -509,11 +564,11 @@ export default class SchemeView extends JetView {
 	}
 
 	removeConnectionsByLine(lnID) {
-		for (let key in this.ButtonsPack) {
-			this.ButtonsPack[key].forEach((value, index) => {
-				if (lnID === value) this.ButtonsPack[key].splice(index, 1);
+		for (let key in this.UnitsPack) {
+			this.UnitsPack[key].forEach((value, index) => {
+				if (lnID === value) this.UnitsPack[key].splice(index, 1);
 			});
-			if (this.ButtonsPack[key].length === 0) delete this.ButtonsPack[key];
+			if (this.UnitsPack[key].length === 0) delete this.UnitsPack[key];
 		}
 		this.LinesPack[lnID].forEach((value, index, array) => {
 			if (this.Graph.hasOwnProperty(value)) {
@@ -539,7 +594,7 @@ export default class SchemeView extends JetView {
 	}
 
 	removeConnectionsByUnit(unitID) {
-		if (this.ButtonsPack.hasOwnProperty(unitID)) delete this.ButtonsPack[unitID];
+		if (this.UnitsPack.hasOwnProperty(unitID)) delete this.UnitsPack[unitID];
 	}
 
 	getResult() {
@@ -574,11 +629,23 @@ export default class SchemeView extends JetView {
 				array: value
 			}, 0);
 		});
-
 		$$("listWays").sort("#num#", "asc", "int");
 
 		this.resizeWin(this.winResult, 70);
 		this.winResult.show();
+	}
+
+	renderWinInfo(unitID) {
+		let parentLabel = $$($$(unitID).config.$parentID).config.label;
+		let parentDescription = $$($$(unitID).config.$parentID).config.$description;
+		if ((parentDescription) && (parentDescription !== "")) {
+			$$("labelInfo").define("label", parentLabel);
+			$$("textInfo").define("template", '<span>' + parentDescription + '</span>');
+			$$("labelInfo").refresh();
+			$$("textInfo").refresh();
+			this.resizeWin(this.winInfo, 50);
+			this.winInfo.show();
+		}
 	}
 
 	resizeWin(win, per) {
