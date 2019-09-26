@@ -1,6 +1,6 @@
-export function buHTML() {}
+export function mngHTML() {}
 
-buHTML.prototype.svg = function(options) {
+mngHTML.prototype.svg = function(options) {
 	let id = options.id || this.randomID(25);
 	let width = options.width || "100px";
 	let height = options.height || "100px";
@@ -14,7 +14,7 @@ buHTML.prototype.svg = function(options) {
 	return svg;
 }
 
-buHTML.prototype.line = function(options) {
+mngHTML.prototype.line = function(options) {
 	let id = options.id || this.randomID(25);
 	let x1 = options.x1 || 0;
 	let y1 = options.y1 || 0;
@@ -37,6 +37,6 @@ buHTML.prototype.line = function(options) {
 	return line;
 }
 
-buHTML.prototype.randomID = function(size = 25) {
+mngHTML.prototype.randomID = function(size = 25) {
 	return Math.random().toString(size).substring(2, 15);
 }

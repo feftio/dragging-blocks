@@ -1,6 +1,6 @@
-export function buCoords() {}
+export function mngCoords() {}
 
-buCoords.prototype.getLineCoords = function(fromOffset, toOffset, Coords) {
+mngCoords.prototype.getLineCoords = function(fromOffset, toOffset, Coords) {
 	let fromCoords = Coords.fromCoords;
 	let toCoords = Coords.toCoords;
 	let x1, y1, x2, y2;
@@ -49,6 +49,6 @@ buCoords.prototype.getLineCoords = function(fromOffset, toOffset, Coords) {
 	}
 }
 
-buCoords.prototype.angleVectors = function(v1, v2) {
+mngCoords.prototype.angleVectors = function(v1, v2) {
 	return Math.acos(((v1.x * v2.x) + (v1.y * v2.y)) / (Math.sqrt((v1.x * v1.x) + (v1.y * v1.y)) * Math.sqrt((v2.x * v2.x) + (v2.y * v2.y)))) * 180 / Math.PI;
 }

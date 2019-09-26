@@ -10,14 +10,17 @@ import {
 	GraphX
 } from "helpers/GraphX";
 import {
-	buCoords
-} from "helpers/buCoords";
+	mngCoords
+} from "helpers/mngCoords";
 import {
-	buHTML
-} from "helpers/buHTML";
+	mngHTML
+} from "helpers/mngHTML";
 import {
 	mngID
 } from "helpers/mngID";
+import {
+	LeaderLine
+} from "helpers/leader-line.min"
 
 export default class SchemeView extends JetView {
 
@@ -98,6 +101,7 @@ export default class SchemeView extends JetView {
 							width: 100,
 							badge: 0,
 							click: () => {
+								this.clickSave();
 								console.log(JSON.stringify(this.GraphReverse));
 							}
 						}]
@@ -169,8 +173,8 @@ export default class SchemeView extends JetView {
 			"line": "line_"
 		};
 
-		this.buCoords = new buCoords();
-		this.buHTML = new buHTML();
+		this.mngCoords = new mngCoords();
+		this.mngHTML = new mngHTML();
 		this.mngID = new mngID(OptionsID);
 		this.fuID = "";
 
@@ -190,7 +194,7 @@ export default class SchemeView extends JetView {
 		this.module = this.$$("module");
 		this.output = this.$$("output");
 
-		this.svg = this.buHTML.svg({
+		this.svg = this.mngHTML.svg({
 			id: "svg",
 			width: "100%",
 			height: "100%"
@@ -373,6 +377,8 @@ export default class SchemeView extends JetView {
 		}
 	}
 
+	//this.Scheme.
+
 	focusChange(tuID) {
 		this.focusOff();
 		this.focusOn(tuID);
@@ -401,7 +407,7 @@ export default class SchemeView extends JetView {
 				}
 			}
 
-			lnC = this.buCoords.getLineCoords({
+			lnC = this.mngCoords.getLineCoords({
 				x: fromUnit.$view.offsetLeft,
 				y: fromUnit.$view.offsetTop
 			}, {
@@ -414,7 +420,7 @@ export default class SchemeView extends JetView {
 
 			lnID = this.mngID.get("line");
 
-			this.svg.appendChild(this.buHTML.line({
+			this.svg.appendChild(this.mngHTML.line({
 				id: lnID,
 				x1: lnC.x1,
 				y1: lnC.y1,
@@ -544,7 +550,7 @@ export default class SchemeView extends JetView {
 				toUnit = $$(toID);
 				line = document.getElementById(lnID);
 
-				lnC = this.buCoords.getLineCoords({
+				lnC = this.mngCoords.getLineCoords({
 					x: pos.x,
 					y: pos.y
 				}, {
