@@ -10,17 +10,8 @@ import {
 	GraphX
 } from "helpers/GraphX";
 import {
-	mngCoords
-} from "helpers/mngCoords";
-import {
-	mngHTML
-} from "helpers/mngHTML";
-import {
 	mngID
 } from "helpers/mngID";
-import {
-	LeaderLine
-} from "helpers/leader-line.min"
 
 export default class SchemeView extends JetView {
 
@@ -173,8 +164,6 @@ export default class SchemeView extends JetView {
 			"line": "line_"
 		};
 
-		this.mngCoords = new mngCoords();
-		this.mngHTML = new mngHTML();
 		this.mngID = new mngID(OptionsID);
 		this.fuID = "";
 
@@ -184,6 +173,7 @@ export default class SchemeView extends JetView {
 		this.Graph = {};
 		this.GraphReverse = {};
 		this.ButtonCoordinates = {};
+		this.LeaderLines = {};
 		// ---
 
 		this.layer = this.$$("layer");
@@ -194,12 +184,6 @@ export default class SchemeView extends JetView {
 		this.module = this.$$("module");
 		this.output = this.$$("output");
 
-		this.svg = this.mngHTML.svg({
-			id: "svg",
-			width: "100%",
-			height: "100%"
-		});
-		this.drop.$view.appendChild(this.svg);
 		this.drop.$view.onclick = (event) => {
 			if (event.target === this.svg) this.focusOff(this.fuID);
 		}
@@ -211,7 +195,6 @@ export default class SchemeView extends JetView {
 			if (!this.winResult.config.hidden) this.resizeWin(this.winResult, 70);
 			if (!this.winInfo.config.hidden) this.resizeWin(this.winInfo, 50);
 		}
-
 	}
 
 	initUI() {
@@ -377,8 +360,6 @@ export default class SchemeView extends JetView {
 		}
 	}
 
-	//this.Scheme.
-
 	focusChange(tuID) {
 		this.focusOff();
 		this.focusOn(tuID);
@@ -386,9 +367,7 @@ export default class SchemeView extends JetView {
 
 	addLine(fuID, tuID) {
 		if (((fuID) || (fuID.length !== 0)) && (fuID !== tuID)) {
-			let lnID, lnC;
-			let fromID, toID;
-			let fromUnit, toUnit;
+			let line, lnID, fromID, toID, fromUnit, toUnit;
 
 			fromID = fuID;
 			toID = tuID;
@@ -407,31 +386,22 @@ export default class SchemeView extends JetView {
 				}
 			}
 
-			lnC = this.mngCoords.getLineCoords({
-				x: fromUnit.$view.offsetLeft,
-				y: fromUnit.$view.offsetTop
-			}, {
-				x: toUnit.$view.offsetLeft,
-				y: toUnit.$view.offsetTop
-			}, {
-				fromCoords: fromUnit.$view.getBoundingClientRect(),
-				toCoords: toUnit.$view.getBoundingClientRect()
-			});
-
 			lnID = this.mngID.get("line");
+			line = new LeaderLine(fromUnit.$view, toUnit.$view, {
+				path: "fluid",
+				startPlug: "disc",
+				endPlug: "arrow1",
+				//endSocket: 'left',
+				hide: true,
+				size: 3,
+				duration: 300,
+				timing: 'ease-in-out',
+				startPlugColor: '#00B7F1',
+				endPlugColor: '#007AFF',
+				gradient: true
+			}).show("draw");
 
-			this.svg.appendChild(this.mngHTML.line({
-				id: lnID,
-				x1: lnC.x1,
-				y1: lnC.y1,
-				x2: lnC.x2,
-				y2: lnC.y2,
-				markerStart: "circle",
-				markerEnd: "arrow",
-				onclick: (event) => {
-					this.removeLine(event.target.id);
-				}
-			}));
+			this.LeaderLines[lnID] = line;
 			this.addConnections(fromID, lnID, toID);
 		}
 	}
@@ -444,8 +414,8 @@ export default class SchemeView extends JetView {
 		let unitID = this.mngID.get(parentType);
 
 		if (parentType !== "module") {
-			width = 50;
-			height = 50;
+			width = 60;
+			height = 60;
 			css = "webix_primary";
 		} else {
 			width = 80;
@@ -470,9 +440,9 @@ export default class SchemeView extends JetView {
 		this.ctxmUnit.attachTo($$(unitID).$view);
 
 		$$(unitID).$view.firstChild.firstChild.style.transition = "background-color 0.15s ease-in-out";
-		$$(unitID).$view.firstChild.firstChild.style.borderRadius = "100%";
-		$$(unitID).$view.firstChild.style.borderRadius = "100%";
-		$$(unitID).$view.style.borderRadius = "100%";
+		//$$(unitID).$view.firstChild.firstChild.style.borderRadius = "100%";
+		//$$(unitID).$view.firstChild.style.borderRadius = "100%";
+		//$$(unitID).$view.style.borderRadius = "100%";
 
 		$$(unitID).$view.onmousedown = (event) => {
 			if (event.which == 1) this.ButtonCoordinates = event.target.getBoundingClientRect();
@@ -494,13 +464,13 @@ export default class SchemeView extends JetView {
 	}
 
 	removeLine(lnID) {
+		let line = this.LeaderLines[lnID];
 		this.mngID.throw(lnID);
 		this.removeConnectionsByLine(lnID);
-		document.getElementById(lnID).classList.add("animated", "fadeOutDown");
-		document.getElementById(lnID).addEventListener("animationend", () => {
-			document.getElementById(lnID).remove();
-		});
-
+		line.hide("draw");
+		setTimeout(() => {
+			line.remove()
+		}, 2000);
 	}
 
 	removeUnit(unitID) {
@@ -510,7 +480,7 @@ export default class SchemeView extends JetView {
 			});
 		}
 		this.focusOff();
-		$$(unitID).$view.classList.add("animated", "rollOut");
+		$$(unitID).$view.classList.add("animated", "bounceOut", "duration-faster");
 		$$(unitID).$view.addEventListener("animationend", () => {
 			this.mngID.throw(unitID);
 			this.removeConnectionsByUnit(unitID);
@@ -531,10 +501,9 @@ export default class SchemeView extends JetView {
 		}
 	}
 
-	rewriteLine(tuID, pos) {
+	rewriteLine(tuID) {
 		if (this.UnitsPack.hasOwnProperty(tuID)) {
 			let line;
-			let lnID, lnC;
 			let fromID, toID;
 			let fromUnit, toUnit;
 
@@ -548,30 +517,8 @@ export default class SchemeView extends JetView {
 
 				fromUnit = $$(fromID);
 				toUnit = $$(toID);
-				line = document.getElementById(lnID);
-
-				lnC = this.mngCoords.getLineCoords({
-					x: pos.x,
-					y: pos.y
-				}, {
-					x: toUnit.$view.offsetLeft,
-					y: toUnit.$view.offsetTop
-				}, {
-					fromCoords: fromUnit.$view.getBoundingClientRect(),
-					toCoords: toUnit.$view.getBoundingClientRect()
-				});
-
-				if ((fromID in this.Graph) && (this.Graph[fromID].indexOf(toID) >= 0)) {
-					line.setAttribute("x1", lnC.x1);
-					line.setAttribute("y1", lnC.y1);
-					line.setAttribute("x2", lnC.x2);
-					line.setAttribute("y2", lnC.y2);
-				} else {
-					line.setAttribute("x1", lnC.x2);
-					line.setAttribute("y1", lnC.y2);
-					line.setAttribute("x2", lnC.x1);
-					line.setAttribute("y2", lnC.y1);
-				}
+				line = this.LeaderLines[lnID];
+				line.position();
 			});
 		}
 	}
@@ -713,9 +660,9 @@ export default class SchemeView extends JetView {
 				if (pos.y > (this.drop.$height - control.$height)) pos.y = control.config.top = this.drop.$height - control.$height;
 				setTimeout(() => {
 					window.requestAnimationFrame(() => {
-						this.rewriteLine(control.config.id, pos);
+						this.rewriteLine(control.config.id);
 					});
-				}, 1000 / 500);
+				}, 1);
 			},
 
 			$dragCreate: (source, ev) => {

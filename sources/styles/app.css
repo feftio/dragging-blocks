@@ -98,3 +98,7 @@ line:hover {
     -ms-user-select: none;
         user-select: none;
 }
+
+.duration-faster {
+    animation-duration: 0.8s !important;
+}
