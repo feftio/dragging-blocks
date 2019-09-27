@@ -99,6 +99,22 @@ line:hover {
         user-select: none;
 }
 
-.duration-faster {
+.duration-50ms {
+    animation-duration: 0.5s !important;
+}
+
+.duration-80ms {
     animation-duration: 0.8s !important;
+}
+
+.duration-100ms {
+    animation-duration: 1s !important;
+}
+
+.duration-150ms {
+    animation-duration: 1.5s !important;
+}
+
+.duration-200ms {
+    animation-duration: 2s !important;
 }

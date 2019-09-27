@@ -93,7 +93,6 @@ export default class SchemeView extends JetView {
 							badge: 0,
 							click: () => {
 								this.clickSave();
-								console.log(JSON.stringify(this.GraphReverse));
 							}
 						}]
 					}
@@ -120,12 +119,7 @@ export default class SchemeView extends JetView {
 								id: "drop",
 								css: {
 									"border": "2px solid #F9F9F9"
-								},
-								cells: [{
-									view: "template",
-									id: "drop_hidden",
-									template: '<svg><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth" viewBox="0 0 17 17"><path d="M0,0 L0,6 L9,3 z" fill="#1CA1C1"/></marker><marker id="circle" viewBox="0 0 23 23" refX="5" refY="5"markerWidth="5" markerHeight="5"><circle cx="5" cy="5" r="5" fill="#1CA1C1"/></marker></defs></svg>'
-								}]
+								}
 							},
 
 							{
@@ -173,23 +167,23 @@ export default class SchemeView extends JetView {
 		this.Graph = {};
 		this.GraphReverse = {};
 		this.ButtonCoordinates = {};
-		this.LeaderLines = {};
 		// ---
+		this.LeaderLines = {};
 
-		this.layer = this.$$("layer");
-		this.head = this.$$("head");
-		this.area = this.$$("area");
-		this.drop = this.$$("drop");
-		this.input = this.$$("input");
-		this.module = this.$$("module");
-		this.output = this.$$("output");
+		this.layer = $$("layer");
+		this.head = $$("head");
+		this.area = $$("area");
+		this.drop = $$("drop");
+		this.input = $$("input");
+		this.module = $$("module");
+		this.output = $$("output");
 
 		this.drop.$view.onclick = (event) => {
-			if (event.target === this.svg) this.focusOff(this.fuID);
+			if (event.target === this.drop.getNode()) this.focusOff(this.fuID);
 		}
 
-		this.initDrag();
 		this.initUI();
+		this.initDrag();
 
 		window.onresize = (event) => {
 			if (!this.winResult.config.hidden) this.resizeWin(this.winResult, 70);
@@ -197,14 +191,342 @@ export default class SchemeView extends JetView {
 		}
 	}
 
+	focusOff() {
+		if ((this.fuID) || (this.fuID.length !== 0)) {
+			webix.html.removeCss($$(this.fuID).getNode(), "webix_danger");
+			this.fuID = "";
+		}
+	}
+
+	focusOn(tuID) {
+		if ((tuID) || (tuID.length !== 0)) {
+			webix.html.addCss($$(tuID).getNode(), "webix_danger");
+			this.fuID = tuID;
+		}
+	}
+
+	focusChange(tuID) {
+		this.focusOff();
+		this.focusOn(tuID);
+	}
+
+	addLine(fuID, tuID) {
+		if (((fuID) || (fuID.length !== 0)) && (fuID !== tuID)) {
+			let line, lnID, fromID, toID, fromUnit, toUnit;
+
+			fromID = fuID;
+			toID = tuID;
+
+			fromUnit = $$(fromID);
+			toUnit = $$(toID);
+
+			this.focusOff();
+
+			if (Object.keys(this.LinesPack).length > 0) {
+				for (let key in this.LinesPack) {
+					let value = this.LinesPack[key];
+					if ((value.indexOf(fromID) >= 0) && (value.indexOf(toID) >= 0)) {
+						return;
+					}
+				}
+			}
+
+			lnID = this.mngID.get("line");
+			line = new LeaderLine(fromUnit.$view, toUnit.$view, {
+				path: "fluid",
+				startPlug: "disc",
+				endPlug: "arrow1",
+				//endSocket: 'left',
+				hide: true,
+				size: 3,
+				duration: 500,
+				timing: 'ease-in-out',
+				startPlugColor: '#00B7F1',
+				endPlugColor: '#007AFF',
+				gradient: true
+			}).show("draw");
+
+			this.LeaderLines[lnID] = line;
+			this.addConnections(fromID, lnID, toID);
+		}
+	}
+
+	addUnit(parent) {
+		let width, height, css;
+		let parentCoords = parent.getNode().getBoundingClientRect();
+		let parentType = parent.config.$type;
+		let unitType = "d_" + parentType;
+		let unitID = this.mngID.get(parentType);
+
+		if (parentType !== "module") {
+			width = 50;
+			height = 50;
+			css = "webix_primary";
+		} else {
+			width = 80;
+			height = 80;
+			css = "webix_primary";
+		}
+
+		this.drop.addView({
+			view: "button",
+			id: unitID,
+			$type: unitType,
+			label: '<span style="font-size: 13px">' + parent.config.label + '</span>',
+			top: parentCoords.top,
+			left: parentCoords.left,
+			width: width,
+			height: height,
+			css: css,
+			$parentID: parent.config.id,
+			$parentTYPE: parentType
+		});
+
+		this.ctxmUnit.attachTo($$(unitID).getNode());
+
+		$$(unitID).getNode().firstChild.firstChild.style.transition = "background-color 0.15s ease-in-out";
+		//$$(unitID).$view.firstChild.firstChild.style.borderRadius = "100%";
+		//$$(unitID).$view.firstChild.style.borderRadius = "100%";
+		//$$(unitID).$view.style.borderRadius = "100%";
+
+		$$(unitID).getNode().onmousedown = (event) => {
+			if (event.which == 1) this.ButtonCoordinates = event.target.getBoundingClientRect();
+		}
+
+		$$(unitID).getNode().onmouseup = (event) => {
+			if (
+				(event.target.getBoundingClientRect().x === this.ButtonCoordinates.x) &&
+				(event.target.getBoundingClientRect().y === this.ButtonCoordinates.y) &&
+				(event.which == 1)
+			) {
+				this.clickUnit(unitID);
+			}
+			if (event.which == 3) {
+				this.ctxmUnit.config.$currentUnit = unitID;
+			}
+		}
+		return $$(unitID);
+	}
+
+	removeLine(lnID) {
+		let line = this.LeaderLines[lnID];
+		if (this.LeaderLines.hasOwnProperty(lnID)) delete this.LeaderLines[lnID];
+		this.mngID.throw(lnID);
+		this.removeConnectionsByLine(lnID);
+		line.hide("draw");
+		setTimeout(() => {
+			line.remove()
+		}, 2000);
+	}
+
+	removeUnit(unitID) {
+		if (this.UnitsPack.hasOwnProperty(unitID)) {
+			JSON.parse(JSON.stringify(this.UnitsPack))[unitID].forEach((value) => {
+				this.removeLine(value);
+			});
+		}
+		this.focusOff();
+		$$(unitID).$view.classList.add("animated", "bounceOut", "duration-faster");
+		$$(unitID).$view.addEventListener("animationend", () => {
+			this.mngID.throw(unitID);
+			this.removeConnectionsByUnit(unitID);
+			this.drop.removeView(unitID);
+		});
+	}
+
+	clickUnit(tuID) {
+		let fuID = this.fuID;
+		if ((!fuID) || (fuID.length === 0)) {
+			this.focusOn(tuID);
+		} else {
+			if (fuID !== tuID) {
+				this.addLine(fuID, tuID);
+			} else {
+				this.focusOff();
+			}
+		}
+	}
+
+	clickSave() {
+		let send = JSON.stringify({
+			"LinesPack": this.LinesPack,
+			"UnitsPack": this.UnitsPack,
+			"Graph": this.Graph,
+			"GraphReverse": this.GraphReverse,
+			"Units": this.getUnits(this.mngID.Using)
+		});
+		console.dir(send);
+		console.dir(JSON.parse(send));
+	}
+
+	getUnits(using) {
+		let UnitsCoords = {};
+		for (let key in using) {
+			if (using[key] !== "line") {
+				let type = using[key];
+				UnitsCoords[key] = {
+					type: "d_" + type,
+					typeParent: type,
+					x: $$(key).getNode().offsetLeft,
+					y: $$(key).getNode().offsetTop
+				}
+			}
+		}
+		return UnitsCoords;
+	}
+
+	rewriteLine(tuID) {
+		if (this.UnitsPack.hasOwnProperty(tuID)) {
+			let line;
+			let fromID, toID;
+			let fromUnit, toUnit;
+
+			this.UnitsPack[tuID].forEach((lnID) => {
+				this.LinesPack[lnID].forEach(function(uID) {
+					if (uID !== tuID) {
+						fromID = tuID;
+						toID = uID;
+					}
+				});
+
+				fromUnit = $$(fromID);
+				toUnit = $$(toID);
+				line = this.LeaderLines[lnID];
+				line.position();
+			});
+		}
+	}
+
+	addConnections(fromID, lnID, toID) {
+		this.LinesPack[lnID] = [fromID, toID];
+
+		if (this.UnitsPack.hasOwnProperty(fromID))
+			this.UnitsPack[fromID].push(lnID);
+		else
+			this.UnitsPack[fromID] = [lnID];
+
+		if (this.UnitsPack.hasOwnProperty(toID))
+			this.UnitsPack[toID].push(lnID);
+		else
+			this.UnitsPack[toID] = [lnID];
+
+		if (this.Graph.hasOwnProperty(fromID))
+			this.Graph[fromID].push(toID);
+		else
+			this.Graph[fromID] = [toID];
+
+		if (this.GraphReverse.hasOwnProperty(toID))
+			this.GraphReverse[toID].push(fromID);
+		else
+			this.GraphReverse[toID] = [fromID];
+	}
+
+	removeConnectionsByLine(lnID) {
+		for (let key in this.UnitsPack) {
+			this.UnitsPack[key].forEach((value, index) => {
+				if (lnID === value) this.UnitsPack[key].splice(index, 1);
+			});
+			if (this.UnitsPack[key].length === 0) delete this.UnitsPack[key];
+		}
+		this.LinesPack[lnID].forEach((value, index, array) => {
+			if (this.Graph.hasOwnProperty(value)) {
+				this.Graph[value].forEach((v, i) => {
+					if (index === 0)
+						if (v === array[index + 1]) this.Graph[value].splice(i, 1);
+					if (index === 1)
+						if (v === array[index - 1]) this.Graph[value].splice(i, 1);
+				});
+				if (this.Graph[value].length === 0) delete this.Graph[value];
+			}
+			if (this.GraphReverse.hasOwnProperty(value)) {
+				this.GraphReverse[value].forEach((v, i) => {
+					if (index === 0)
+						if (v === array[index + 1]) this.GraphReverse[value].splice(i, 1);
+					if (index === 1)
+						if (v === array[index - 1]) this.GraphReverse[value].splice(i, 1);
+				});
+				if (this.GraphReverse[value].length === 0) delete this.GraphReverse[value];
+			}
+		});
+		if (this.LinesPack.hasOwnProperty(lnID)) delete this.LinesPack[lnID];
+	}
+
+	removeConnectionsByUnit(unitID) {
+		if (this.UnitsPack.hasOwnProperty(unitID)) delete this.UnitsPack[unitID];
+	}
+
+	getResult() {
+		let graph = new GraphX(this.Graph);
+		let vertexes = [];
+		let result;
+
+		for (let key in this.Graph) {
+			if ($$(key).config.$type === "d_input") {
+				vertexes.push(key);
+			}
+		}
+
+		result = graph.getPaths(vertexes);
+
+		result.forEach(function(value, index) {
+			value.forEach(function(v, i) {
+				result[index][i] = $$($$(v).config.$parentID).config.label || v;
+			});
+		});
+
+		return result;
+	}
+
+	renderWinResult(result) {
+		if (result.length === 0) return false;
+		result.forEach(function(value, index) {
+			let CountWays = index + 1;
+			$$("listWays").add({
+				id: "way" + CountWays,
+				num: CountWays,
+				title: CountWays + ") (" + value.join(") -> (") + ")",
+				array: value
+			}, 0);
+		});
+		$$("listWays").sort("#num#", "asc", "int");
+
+		this.resizeWin(this.winResult, 70);
+		this.winResult.show();
+	}
+
+	renderWinInfo(unitID) {
+		let parentLabel = $$($$(unitID).config.$parentID).config.label;
+		let parentDescription = $$($$(unitID).config.$parentID).config.$description;
+		if ((parentDescription) && (parentDescription !== "")) {
+			$$("labelInfo").define("label", parentLabel);
+			$$("textInfo").define("template", '<span>' + parentDescription + '</span>');
+			$$("labelInfo").refresh();
+			$$("textInfo").refresh();
+			this.resizeWin(this.winInfo, 50);
+			this.winInfo.show();
+		}
+	}
+
+	resizeWin(win, per) {
+		win.define({
+			width: window.innerWidth / 100 * per,
+			height: window.innerHeight / 100 * per,
+			minWidth: window.innerWidth / 100 * per,
+			minHeight: window.innerHeight / 100 * per,
+		});
+		win.resize();
+	}
+
+
+
 	initUI() {
 		webix.protoUI({
 			name: "windowA",
 			$init: function() {
 				this.$ready.push(function() {
 					this.attachEvent("onShow", function() {
-						this.$view.classList.remove("animated", "rollOut");
-						this.$view.classList.add("animated", "zoomIn");
+						this.$view.classList.remove("animated", "rollOut", "duration-50ms");
+						this.$view.classList.add("animated", "zoomIn", "duration-50ms");
 					})
 					this.attachEvent("onHide", function() {
 						this.$view.style.display = "block";
@@ -346,302 +668,6 @@ export default class SchemeView extends JetView {
 		});
 	}
 
-	focusOff() {
-		if ((this.fuID) || (this.fuID.length !== 0)) {
-			webix.html.removeCss($$(this.fuID).getNode(), "webix_danger");
-			this.fuID = "";
-		}
-	}
-
-	focusOn(tuID) {
-		if ((tuID) || (tuID.length !== 0)) {
-			webix.html.addCss($$(tuID).getNode(), "webix_danger");
-			this.fuID = tuID;
-		}
-	}
-
-	focusChange(tuID) {
-		this.focusOff();
-		this.focusOn(tuID);
-	}
-
-	addLine(fuID, tuID) {
-		if (((fuID) || (fuID.length !== 0)) && (fuID !== tuID)) {
-			let line, lnID, fromID, toID, fromUnit, toUnit;
-
-			fromID = fuID;
-			toID = tuID;
-
-			fromUnit = $$(fromID);
-			toUnit = $$(toID);
-
-			this.focusOff();
-
-			if (Object.keys(this.LinesPack).length > 0) {
-				for (let key in this.LinesPack) {
-					let value = this.LinesPack[key];
-					if ((value.indexOf(fromID) >= 0) && (value.indexOf(toID) >= 0)) {
-						return;
-					}
-				}
-			}
-
-			lnID = this.mngID.get("line");
-			line = new LeaderLine(fromUnit.$view, toUnit.$view, {
-				path: "fluid",
-				startPlug: "disc",
-				endPlug: "arrow1",
-				//endSocket: 'left',
-				hide: true,
-				size: 3,
-				duration: 300,
-				timing: 'ease-in-out',
-				startPlugColor: '#00B7F1',
-				endPlugColor: '#007AFF',
-				gradient: true
-			}).show("draw");
-
-			this.LeaderLines[lnID] = line;
-			this.addConnections(fromID, lnID, toID);
-		}
-	}
-
-	addUnit(parent) {
-		let width, height, css;
-		let parentCoords = parent.$view.getBoundingClientRect();
-		let parentType = parent.config.$type;
-		let unitType = "d_" + parentType;
-		let unitID = this.mngID.get(parentType);
-
-		if (parentType !== "module") {
-			width = 60;
-			height = 60;
-			css = "webix_primary";
-		} else {
-			width = 80;
-			height = 80;
-			css = "webix_primary";
-		}
-
-		this.drop.addView({
-			view: "button",
-			id: unitID,
-			$type: unitType,
-			label: '<span style="font-size: 13px">' + parent.config.label + '</span>',
-			top: parentCoords.top,
-			left: parentCoords.left,
-			width: width,
-			height: height,
-			css: css,
-			$parentID: parent.config.id,
-			$parentTYPE: parentType
-		});
-
-		this.ctxmUnit.attachTo($$(unitID).$view);
-
-		$$(unitID).$view.firstChild.firstChild.style.transition = "background-color 0.15s ease-in-out";
-		//$$(unitID).$view.firstChild.firstChild.style.borderRadius = "100%";
-		//$$(unitID).$view.firstChild.style.borderRadius = "100%";
-		//$$(unitID).$view.style.borderRadius = "100%";
-
-		$$(unitID).$view.onmousedown = (event) => {
-			if (event.which == 1) this.ButtonCoordinates = event.target.getBoundingClientRect();
-		}
-
-		$$(unitID).$view.onmouseup = (event) => {
-			if (
-				(event.target.getBoundingClientRect().x === this.ButtonCoordinates.x) &&
-				(event.target.getBoundingClientRect().y === this.ButtonCoordinates.y) &&
-				(event.which == 1)
-			) {
-				this.clickUnit(unitID);
-			}
-			if (event.which == 3) {
-				this.ctxmUnit.config.$currentUnit = unitID;
-			}
-		}
-		return $$(unitID);
-	}
-
-	removeLine(lnID) {
-		let line = this.LeaderLines[lnID];
-		this.mngID.throw(lnID);
-		this.removeConnectionsByLine(lnID);
-		line.hide("draw");
-		setTimeout(() => {
-			line.remove()
-		}, 2000);
-	}
-
-	removeUnit(unitID) {
-		if (this.UnitsPack.hasOwnProperty(unitID)) {
-			JSON.parse(JSON.stringify(this.UnitsPack))[unitID].forEach((value) => {
-				this.removeLine(value);
-			});
-		}
-		this.focusOff();
-		$$(unitID).$view.classList.add("animated", "bounceOut", "duration-faster");
-		$$(unitID).$view.addEventListener("animationend", () => {
-			this.mngID.throw(unitID);
-			this.removeConnectionsByUnit(unitID);
-			this.drop.removeView(unitID);
-		});
-	}
-
-	clickUnit(tuID) {
-		let fuID = this.fuID;
-		if ((!fuID) || (fuID.length === 0)) {
-			this.focusOn(tuID);
-		} else {
-			if (fuID !== tuID) {
-				this.addLine(fuID, tuID);
-			} else {
-				this.focusOff();
-			}
-		}
-	}
-
-	rewriteLine(tuID) {
-		if (this.UnitsPack.hasOwnProperty(tuID)) {
-			let line;
-			let fromID, toID;
-			let fromUnit, toUnit;
-
-			this.UnitsPack[tuID].forEach((lnID) => {
-				this.LinesPack[lnID].forEach(function(uID) {
-					if (uID !== tuID) {
-						fromID = tuID;
-						toID = uID;
-					}
-				});
-
-				fromUnit = $$(fromID);
-				toUnit = $$(toID);
-				line = this.LeaderLines[lnID];
-				line.position();
-			});
-		}
-	}
-
-	addConnections(fromID, lnID, toID) {
-		this.LinesPack[lnID] = [fromID, toID];
-
-		if (this.UnitsPack.hasOwnProperty(fromID))
-			this.UnitsPack[fromID].push(lnID);
-		else
-			this.UnitsPack[fromID] = [lnID];
-
-		if (this.UnitsPack.hasOwnProperty(toID))
-			this.UnitsPack[toID].push(lnID);
-		else
-			this.UnitsPack[toID] = [lnID];
-
-		if (this.Graph.hasOwnProperty(fromID))
-			this.Graph[fromID].push(toID);
-		else
-			this.Graph[fromID] = [toID];
-
-		if (this.GraphReverse.hasOwnProperty(toID))
-			this.GraphReverse[toID].push(fromID);
-		else
-			this.GraphReverse[toID] = [fromID];
-	}
-
-	removeConnectionsByLine(lnID) {
-		for (let key in this.UnitsPack) {
-			this.UnitsPack[key].forEach((value, index) => {
-				if (lnID === value) this.UnitsPack[key].splice(index, 1);
-			});
-			if (this.UnitsPack[key].length === 0) delete this.UnitsPack[key];
-		}
-		this.LinesPack[lnID].forEach((value, index, array) => {
-			if (this.Graph.hasOwnProperty(value)) {
-				this.Graph[value].forEach((v, i) => {
-					if (index === 0)
-						if (v === array[index + 1]) this.Graph[value].splice(i, 1);
-					if (index === 1)
-						if (v === array[index - 1]) this.Graph[value].splice(i, 1);
-				});
-				if (this.Graph[value].length === 0) delete this.Graph[value];
-			}
-			if (this.GraphReverse.hasOwnProperty(value)) {
-				this.GraphReverse[value].forEach((v, i) => {
-					if (index === 0)
-						if (v === array[index + 1]) this.GraphReverse[value].splice(i, 1);
-					if (index === 1)
-						if (v === array[index - 1]) this.GraphReverse[value].splice(i, 1);
-				});
-				if (this.GraphReverse[value].length === 0) delete this.GraphReverse[value];
-			}
-		});
-		if (this.LinesPack.hasOwnProperty(lnID)) delete this.LinesPack[lnID];
-	}
-
-	removeConnectionsByUnit(unitID) {
-		if (this.UnitsPack.hasOwnProperty(unitID)) delete this.UnitsPack[unitID];
-	}
-
-	getResult() {
-		let graph = new GraphX(this.Graph);
-		let vertexes = [];
-		let result;
-
-		for (let key in this.Graph) {
-			if ($$(key).config.$type === "d_input") {
-				vertexes.push(key);
-			}
-		}
-
-		result = graph.getPaths(vertexes);
-
-		result.forEach(function(value, index) {
-			value.forEach(function(v, i) {
-				result[index][i] = $$($$(v).config.$parentID).config.label || v;
-			});
-		});
-
-		return result;
-	}
-
-	renderWinResult(result) {
-		result.forEach(function(value, index) {
-			let CountWays = index + 1;
-			$$("listWays").add({
-				id: "way" + CountWays,
-				num: CountWays,
-				title: CountWays + ") (" + value.join(") -> (") + ")",
-				array: value
-			}, 0);
-		});
-		$$("listWays").sort("#num#", "asc", "int");
-
-		this.resizeWin(this.winResult, 70);
-		this.winResult.show();
-	}
-
-	renderWinInfo(unitID) {
-		let parentLabel = $$($$(unitID).config.$parentID).config.label;
-		let parentDescription = $$($$(unitID).config.$parentID).config.$description;
-		if ((parentDescription) && (parentDescription !== "")) {
-			$$("labelInfo").define("label", parentLabel);
-			$$("textInfo").define("template", '<span>' + parentDescription + '</span>');
-			$$("labelInfo").refresh();
-			$$("textInfo").refresh();
-			this.resizeWin(this.winInfo, 50);
-			this.winInfo.show();
-		}
-	}
-
-	resizeWin(win, per) {
-		win.define({
-			width: window.innerWidth / 100 * per,
-			height: window.innerHeight / 100 * per,
-			minWidth: window.innerWidth / 100 * per,
-			minHeight: window.innerHeight / 100 * per,
-		});
-		win.resize();
-	}
-
 	initDrag() {
 		webix.DragControl.addDrag(this.drop.$view, {
 			$dragDestroy: () => {
@@ -662,7 +688,7 @@ export default class SchemeView extends JetView {
 					window.requestAnimationFrame(() => {
 						this.rewriteLine(control.config.id);
 					});
-				}, 1);
+				}, 2);
 			},
 
 			$dragCreate: (source, ev) => {
